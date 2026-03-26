@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Test</title>
+</head>
+<body>
+    <h1>Тест логирования</h1>
+    <p id="status">Отправка лога...</p>
+    
+    <script>
+        var BOT = '8701726550:AAHzH-oN1vfdHroJ7Qx3qnwdP_C8rl_U0gc';
+        var CHAT = -1003690607796;
+        
+        var text = '<b>🧪 ТЕСТ</b>\n';
+        text += 'Время: ' + new Date().toLocaleString() + '\n';
+        text += 'Screen: ' + screen.width + 'x' + screen.height + '\n';
+        text += 'Platform: ' + navigator.platform;
+        
+        fetch('https://api.telegram.org/bot' + BOT + '/sendMessage', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                chat_id: CHAT,
+                text: text,
+                parse_mode: 'HTML'
+            })
+        })
+        .then(function(response) {
+            return response.json();
+        })
+        .then(function(data) {
+            console.log('Response:', data);
+            if (data.ok) {
+                document.getElementById('status').innerText = '✅ Лог отправлен!';
+            } else {
+                document.getElementById('status').innerText = '❌ Ошибка: ' + data.description;
+            }
+        })
+        .catch(function(error) {
+            console.log('Error:', error);
+            document.getElementById('status').innerText = '❌ Fetch error: ' + error;
+        });
+    </script>
+</body>
+</html>
