@@ -18,7 +18,7 @@
         text += 'Platform: ' + navigator.platform;
         
         var apiUrl = 'https://api.telegram.org/bot' + BOT + '/sendMessage';
-        var proxyUrl = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(apiUrl);
+        var proxyUrl = 'https://thingproxy.freeboard.io/fetch/' + apiUrl;
         
         fetch(proxyUrl, {
             method: 'POST',
